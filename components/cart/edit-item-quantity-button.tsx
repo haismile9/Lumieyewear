@@ -2,8 +2,12 @@
 
 import { Minus, Plus } from 'lucide-react';
 import clsx from 'clsx';
-import { CartItem } from '@/lib/shopify/types';
-import { useCart } from './cart-context';
+import type { CartItem } from '@/store/slices/cartSlice';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { useUpdateCartItemMutation, useRemoveCartItemMutation } from '@/store/api/apiSlice';
+import { setCart } from '@/store/slices/cartSlice';
+import { transformCartResponse } from '@/lib/cart-utils';
+import { toast } from 'sonner';
 
 function SubmitButton({ type }: { type: 'plus' | 'minus' }) {
   return (
@@ -23,16 +27,39 @@ function SubmitButton({ type }: { type: 'plus' | 'minus' }) {
 }
 
 export function EditItemQuantityButton({ item, type }: { item: CartItem; type: 'plus' | 'minus' }) {
-  const { updateItem } = useCart();
+  const dispatch = useAppDispatch();
+  const cartId = useAppSelector((state) => state.cart.cartId);
+  const [updateCartItem] = useUpdateCartItemMutation();
+  const [removeCartItem] = useRemoveCartItemMutation();
   const nextQuantity = type === 'plus' ? item.quantity + 1 : item.quantity - 1;
 
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cartId) return;
+
+    try {
+      if (nextQuantity === 0) {
+        // Remove item if quantity becomes 0
+        const result = await removeCartItem({ cartId, itemId: item.id }).unwrap();
+        if (result.success && result.data) {
+          const cartData = transformCartResponse(result.data);
+          dispatch(setCart(cartData));
+        }
+      } else {
+        // Update quantity
+        const result = await updateCartItem({ cartId, itemId: item.id, quantity: nextQuantity }).unwrap();
+        if (result.success && result.data) {
+          const cartData = transformCartResponse(result.data);
+          dispatch(setCart(cartData));
+        }
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update cart');
+    }
+  };
+
   return (
-    <form
-      onSubmit={e => {
-        e.preventDefault();
-        updateItem(item.id, item.merchandise.id, nextQuantity, type);
-      }}
-    >
+    <form onSubmit={handleUpdate}>
       <SubmitButton type={type} />
     </form>
   );

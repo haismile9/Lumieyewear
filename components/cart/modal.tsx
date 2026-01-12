@@ -4,7 +4,7 @@ import { ArrowRight, PlusCircleIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useCart } from './cart-context';
+import { useAppSelector } from '@/store/hooks';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../ui/button';
 import { Loader } from '../ui/loader';
@@ -13,29 +13,28 @@ import { formatPrice } from '@/lib/shopify/utils';
 import { useBodyScrollLock } from '@/lib/hooks/use-body-scroll-lock';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Cart } from '../../lib/shopify/types';
 
 const CartContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   return <div className={cn('px-3 md:px-4', className)}>{children}</div>;
 };
 
 const CartItems = ({ closeCart }: { closeCart: () => void }) => {
-  const { cart } = useCart();
+  const cart = useAppSelector((state) => state.cart);
 
-  if (!cart) return <></>;
+  if (!cart || cart.items.length === 0) return <></>;
 
   return (
     <div className="flex flex-col justify-between h-full overflow-hidden">
       <CartContainer className="flex justify-between text-sm text-muted-foreground">
         <span>Products</span>
-        <span>{cart.lines.length} items</span>
+        <span>{cart.items.length} items</span>
       </CartContainer>
       <div className="relative flex-1 min-h-0 py-4 overflow-x-hidden">
         <CartContainer className="overflow-y-auto flex flex-col gap-y-3 h-full scrollbar-hide">
           <AnimatePresence>
-            {cart.lines.map(item => (
+            {cart.items.map(item => (
               <motion.div
-                key={item.merchandise.id}
+                key={item.id}
                 layout
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -59,49 +58,34 @@ const CartItems = ({ closeCart }: { closeCart: () => void }) => {
           <div className="flex justify-between items-center pt-1 pb-1 mb-1.5 text-lg font-semibold">
             <p>Total</p>
             <p className="text-base text-right text-foreground">
-              {formatPrice(cart.cost.totalAmount.amount, cart.cost.totalAmount.currencyCode)}
+              {formatPrice(cart.totalPrice.toString(), 'USD')}
             </p>
           </div>
         </div>
-        <CheckoutButton />
+        <CheckoutButton closeCart={closeCart} />
       </CartContainer>
     </div>
   );
 };
 
-const serializeCart = (cart: Cart) => {
-  return JSON.stringify(
-    cart.lines.map(line => ({
-      merchandiseId: line.merchandise.id,
-      quantity: line.quantity,
-    }))
-  );
-};
+
 
 export default function CartModal() {
-  const { isPending, cart } = useCart();
+  const cart = useAppSelector((state) => state.cart);
   const [isOpen, setIsOpen] = useState(false);
-  const serializedCart = useRef(cart ? serializeCart(cart) : undefined);
+  const prevItemCountRef = useRef(0);
 
   useBodyScrollLock(isOpen);
 
   useEffect(() => {
-    if (!cart || isPending) return;
+    if (!cart) return;
 
-    const newSerializedCart = serializeCart(cart);
-
-    // Initialize on first load
-    if (serializedCart.current === undefined) {
-      serializedCart.current = newSerializedCart;
-      return;
-    }
-
-    // Only open cart if items were actually added/changed
-    if (serializedCart.current !== newSerializedCart) {
-      serializedCart.current = newSerializedCart;
+    // Open cart when items are added
+    if (cart.totalItems > prevItemCountRef.current) {
       setIsOpen(true);
     }
-  }, [cart, isPending]);
+    prevItemCountRef.current = cart.totalItems;
+  }, [cart]);
 
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
@@ -123,7 +107,7 @@ export default function CartModal() {
   const closeCart = () => setIsOpen(false);
 
   const renderCartContent = () => {
-    if (!cart || cart.lines.length === 0) {
+    if (!cart || cart.items.length === 0) {
       return (
         <CartContainer className="flex w-full">
           <Link
@@ -193,15 +177,13 @@ export default function CartModal() {
   );
 }
 
-function CheckoutButton() {
+function CheckoutButton({ closeCart }: { closeCart: () => void }) {
   const { pending } = useFormStatus();
-  const { cart, isPending } = useCart();
+  const cart = useAppSelector((state) => state.cart);
   const router = useRouter();
 
-  const checkoutUrl = cart?.checkoutUrl;
-
   const isLoading = pending;
-  const isDisabled = !checkoutUrl || isPending;
+  const isDisabled = !cart.cartId || cart.items.length === 0;
 
   return (
     <Button
@@ -210,8 +192,9 @@ function CheckoutButton() {
       size="lg"
       className="flex relative gap-3 justify-between items-center w-full"
       onClick={() => {
-        if (checkoutUrl) {
-          router.push(checkoutUrl);
+        if (cart.cartId) {
+          closeCart();
+          router.push(`/checkout/${cart.cartId}`);
         }
       }}
     >

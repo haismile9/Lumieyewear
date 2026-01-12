@@ -166,6 +166,31 @@ export function VariantOptionSelector({ option, variant, product }: VariantOptio
   );
 }
 
+interface VariantSelectorProps extends VariantProps<typeof variantOptionSelectorVariants> {
+  options: ProductOption[];
+  variants: ProductVariant[];
+  product: Product;
+}
+
+export function VariantSelector({ options, variants, product, variant }: VariantSelectorProps) {
+  if (!options.length) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {options.map((option) => (
+        <VariantOptionSelector
+          key={option.id}
+          option={option}
+          product={product}
+          variant={variant}
+        />
+      ))}
+    </div>
+  );
+}
+
 export const useSelectedOptions = (product: Product): Record<string, string> => {
   const { options } = product;
   const searchParams = useSearchParams();

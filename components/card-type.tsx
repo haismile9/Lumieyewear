@@ -6,6 +6,7 @@ interface CardTypeIconProps {
   className?: string;
 }
 
+
 export function CardTypeIcon({ cardType, className = 'w-6 h-6' }: CardTypeIconProps) {
   const Icon = {
     Visa: VisaIcon,

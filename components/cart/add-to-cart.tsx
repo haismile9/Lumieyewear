@@ -2,14 +2,18 @@
 
 import { PlusCircleIcon } from 'lucide-react';
 import { Product, ProductVariant } from '@/lib/shopify/types';
-import { useMemo, useTransition } from 'react';
-import { useCart } from './cart-context';
+import { useMemo, useState } from 'react';
 import { Button, ButtonProps } from '../ui/button';
 import { useSelectedVariant } from '@/components/products/variant-selector';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader } from '../ui/loader';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { useAddCartItemMutation } from '@/store/api/apiSlice';
+import { setCart } from '@/store/slices/cartSlice';
+import { extractProductId, transformCartResponse } from '@/lib/cart-utils';
+import { toast } from 'sonner';
 import { getShopifyProductId } from '@/lib/shopify/utils';
 
 interface AddToCartProps extends ButtonProps {
@@ -44,8 +48,9 @@ export function AddToCartButton({
   icon = <PlusCircleIcon />,
   ...buttonProps
 }: AddToCartButtonProps) {
-  const { addItem } = useCart();
-  const [isLoading, startTransition] = useTransition();
+  const dispatch = useAppDispatch();
+  const cartId = useAppSelector((state) => state.cart.cartId);
+  const [addCartItem, { isLoading }] = useAddCartItemMutation();
 
   // Resolve variant locally only for variantless products (purely synchronous)
   const resolvedVariant = useMemo(() => {
@@ -63,6 +68,30 @@ export function AddToCartButton({
 
   const isDisabled = !product.availableForSale || !resolvedVariant || isLoading;
 
+  const handleAddToCart = async () => {
+    if (!resolvedVariant || !cartId) return;
+
+    try {
+      const productId = extractProductId(product.id);
+      const variantId = resolvedVariant.id !== product.id ? extractProductId(resolvedVariant.id) : null;
+
+      const result = await addCartItem({
+        cartId,
+        productId,
+        variantId: variantId || undefined,
+        quantity: 1,
+      }).unwrap();
+
+      if (result.success && result.data) {
+        const cartData = transformCartResponse(result.data);
+        dispatch(setCart(cartData));
+        toast.success('Added to cart');
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to add to cart');
+    }
+  };
+
   const getLoaderSize = () => {
     const buttonSize = buttonProps.size;
     if (buttonSize === 'sm' || buttonSize === 'icon-sm' || buttonSize === 'icon') return 'sm';
@@ -75,12 +104,7 @@ export function AddToCartButton({
     <form
       onSubmit={e => {
         e.preventDefault();
-
-        if (resolvedVariant) {
-          startTransition(async () => {
-            addItem(resolvedVariant, product);
-          });
-        }
+        handleAddToCart();
       }}
       className={className}
     >

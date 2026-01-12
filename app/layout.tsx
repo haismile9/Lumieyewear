@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { CartProvider } from '@/components/cart/cart-context';
+import { ReduxProvider } from '@/store/provider';
 import { DebugGrid } from '@/components/debug-grid';
 import { isDevelopment } from '@/lib/constants';
 import { getCollections } from '@/lib/shopify';
@@ -46,7 +46,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <V0Provider isV0={isV0}>
-          <CartProvider>
+          <ReduxProvider>
             <NuqsAdapter>
               <main data-vaul-drawer-wrapper="true">
                 <Header collections={collections} />
@@ -55,7 +55,7 @@ export default async function RootLayout({
               {isDevelopment && <DebugGrid />}
               <Toaster closeButton position="bottom-right" />
             </NuqsAdapter>
-          </CartProvider>
+          </ReduxProvider>
           {isV0 && <V0Setup />}
         </V0Provider>
       </body>

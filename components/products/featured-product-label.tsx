@@ -1,9 +1,12 @@
+'use client';
+
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/shopify/types';
 import { AddToCart, AddToCartButton } from '../cart/add-to-cart';
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { VariantSelector } from './variant-selector';
 
 export function FeaturedProductLabel({
   product,
@@ -34,40 +37,55 @@ export function FeaturedProductLabel({
           ) : null}
           <p className="text-sm font-medium line-clamp-3">{product.description}</p>
         </div>
-        <div className="flex col-span-1 gap-3 items-center text-2xl font-semibold md:self-end">
+         <div className="flex col-span-1 gap-3 items-center text-2xl font-semibold">
           ${Number(product.priceRange.minVariantPrice.amount)}
           {product.compareAtPrice && (
             <span className="line-through opacity-30">${Number(product.compareAtPrice.amount)}</span>
           )}
         </div>
+        <div className="col-span-1">
+          {product.options && product.options.length > 0 && (
+            <VariantSelector options={product.options} variants={product.variants} product={product} />
+          )}
+        </div>
         <Suspense
-          fallback={<AddToCartButton className="flex gap-20 justify-between pr-2" size="lg" product={product} variant="accent" />}
+          fallback={<AddToCartButton className="flex gap-20 justify-between pr-2" size="lg" product={product} variant="default" />}
         >
-          <AddToCart className="flex gap-20 justify-between pr-2" size="lg" product={product} variant="accent" />
+          <AddToCart className="flex gap-20 justify-between pr-2" size="lg" product={product} variant="default" />
         </Suspense>
+        
+       
+        
       </div>
     );
   }
 
   return (
-    <div className={cn('flex gap-2 items-center p-2 pl-8 bg-white rounded-md max-w-full', className)}>
-      <div className="pr-6 leading-4 overflow-hidden">
-        <Link
-          href={`/product/${product.handle}`}
-          className="inline-block w-full truncate text-base font-semibold opacity-80 mb-1.5"
-        >
-          {product.title}
-        </Link>
-        <div className="flex gap-2 items-center text-base font-semibold">
-          ${Number(product.priceRange.minVariantPrice.amount)}
-          {product.compareAtPrice && (
-            <span className="text-sm line-through opacity-30">${Number(product.compareAtPrice.amount)}</span>
-          )}
+    <div className={cn('flex flex-col gap-3 p-3 bg-white rounded-md max-w-full', className)}>
+      <div className="flex gap-2 items-center">
+        <div className="pr-6 leading-4 overflow-hidden flex-1">
+          <Link
+            href={`/product/${product.handle}`}
+            className="inline-block w-full truncate text-base font-semibold opacity-80 mb-1.5"
+          >
+            {product.title}
+          </Link>
+          <div className="flex gap-2 items-center text-base font-semibold">
+            ${Number(product.priceRange.minVariantPrice.amount)}
+            {product.compareAtPrice && (
+              <span className="text-sm line-through opacity-30">${Number(product.compareAtPrice.amount)}</span>
+            )}
+          </div>
         </div>
+        <Suspense fallback={<AddToCartButton product={product} iconOnly variant="default" size="icon-lg" />}>
+          <AddToCart product={product} iconOnly variant="default" size="icon-lg" />
+        </Suspense>
       </div>
-      <Suspense fallback={<AddToCartButton product={product} iconOnly variant="default" size="icon-lg" />}>
-        <AddToCart product={product} iconOnly variant="accent" size="icon-lg" />
-      </Suspense>
+      {product.options && product.options.length > 0 && (
+        <div className="w-full">
+          <VariantSelector options={product.options} variants={product.variants} product={product} variant="condensed" />
+        </div>
+      )}
     </div>
   );
 }

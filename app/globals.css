@@ -397,3 +397,47 @@ body,
   overscroll-behavior: none;
   scroll-behavior: smooth;
 }
+
+/* Print styles for order page */
+@media print {
+  /* Hide header, footer, navigation, and action buttons */
+  header, 
+  footer, 
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Optimize for print */
+  body {
+    background: white !important;
+  }
+  
+  /* Remove shadows and adjust borders for cleaner print */
+  .shadow-md, 
+  .shadow-sm {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+  }
+  
+  /* Ensure proper page breaks */
+  .print-page-break {
+    page-break-before: always;
+  }
+  
+  /* Make sure all text is black for print */
+  * {
+    color: black !important;
+  }
+  
+  /* Keep links underlined but remove color */
+  a {
+    text-decoration: underline;
+  }
+  
+  /* Adjust spacing for print */
+  .mx-auto {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}

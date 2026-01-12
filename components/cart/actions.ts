@@ -4,169 +4,210 @@ import { TAGS } from '@/lib/constants';
 import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
 import {
-  createCart as createShopifyCart,
-  addCartLines,
-  updateCartLines,
-  removeCartLines,
-  getCart as getShopifyCart,
-} from '@/lib/shopify/shopify';
-import type { Cart, CartItem, ShopifyCart, ShopifyCartLine } from '@/lib/shopify/types';
+  createCart as createBackendCart,
+  addCartLines as addBackendCartLines,
+  updateCartLines as updateBackendCartLines,
+  removeCartLines as removeBackendCartLines,
+} from '@/lib/shopify/index-backend';
+import backendAPI from '@/lib/shopify/backend-api';
+import type { Cart } from '@/lib/shopify/types';
 
-// Local adapter utilities to return FE Cart (avoid cyclic deps)
-function adaptCartLine(shopifyLine: ShopifyCartLine): CartItem {
-  const merchandise = shopifyLine.merchandise;
-  const product = merchandise.product;
+const CART_COOKIE = 'cartId';
 
-  return {
-    id: shopifyLine.id,
-    quantity: shopifyLine.quantity,
-    cost: {
-      totalAmount: {
-        amount: (parseFloat(merchandise.price.amount) * shopifyLine.quantity).toString(),
-        currencyCode: merchandise.price.currencyCode,
-      },
-    },
-    merchandise: {
-      id: merchandise.id,
-      title: merchandise.title,
-      selectedOptions: merchandise.selectedOptions || [],
-      product: {
-        id: product.title,
-        title: product.title,
-        handle: product.handle,
-        categoryId: undefined,
-        description: '',
-        descriptionHtml: '',
-        featuredImage: product.images?.edges?.[0]?.node
-          ? {
-              ...product.images.edges[0].node,
-              altText: product.images.edges[0].node.altText || product.title,
-              height: 600,
-              width: 600,
-              thumbhash: product.images.edges[0].node.thumbhash || undefined,
-            }
-          : { url: '', altText: '', height: 0, width: 0 },
-        currencyCode: merchandise.price.currencyCode,
-        priceRange: {
-          minVariantPrice: merchandise.price,
-          maxVariantPrice: merchandise.price,
-        },
-        compareAtPrice: undefined,
-        seo: { title: product.title, description: '' },
-        options: [],
-        tags: [],
-        variants: [],
-        images:
-          product.images?.edges?.map((edge: any) => ({
-            ...edge.node,
-            altText: edge.node.altText || product.title,
-            height: 600,
-            width: 600,
-          })) || [],
-        availableForSale: true,
-      },
-    },
-  } satisfies CartItem;
-}
-
-function adaptCart(shopifyCart: ShopifyCart | null): Cart | null {
-  if (!shopifyCart) return null;
-
-  const lines = shopifyCart.lines?.edges?.map((edge: any) => adaptCartLine(edge.node)) || [];
-
-  return {
-    id: shopifyCart.id,
-    checkoutUrl: shopifyCart.checkoutUrl,
-    cost: {
-      subtotalAmount: shopifyCart.cost.subtotalAmount,
-      totalAmount: shopifyCart.cost.totalAmount,
-      totalTaxAmount: shopifyCart.cost.totalTaxAmount,
-    },
-    totalQuantity: lines.reduce((sum: number, line: CartItem) => sum + line.quantity, 0),
-    lines,
-  } satisfies Cart;
-}
-
+// Get or create cart ID
 async function getOrCreateCartId(): Promise<string> {
-  let cartId = (await cookies()).get('cartId')?.value;
+  const cookieStore = await cookies();
+  let cartId = cookieStore.get(CART_COOKIE)?.value;
+  
+  // Check if cartId is in old Shopify format (contains "gid://shopify/")
+  // If so, clear it and create a new backend cart
+  if (cartId && cartId.includes('gid://shopify/')) {
+    console.log('Clearing old Shopify cart ID:', cartId);
+    cartId = undefined;
+  }
+  
   if (!cartId) {
-    const newCart = await createShopifyCart();
-    cartId = newCart.id;
-    (await cookies()).set('cartId', cartId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30,
-    });
-  }
-  return cartId;
-}
-
-// Add item server action: returns adapted Cart
-export async function addItem(variantId: string | undefined): Promise<Cart | null> {
-  if (!variantId) return null;
-  try {
-    const cartId = await getOrCreateCartId();
-    await addCartLines(cartId, [{ merchandiseId: variantId, quantity: 1 }]);
-    const fresh = await getShopifyCart(cartId);
-    revalidateTag(TAGS.cart);
-    return adaptCart(fresh);
-  } catch (error) {
-    console.error('Error adding item to cart:', error);
-    return null;
-  }
-}
-
-// Update item server action (quantity 0 removes): returns adapted Cart
-export async function updateItem({ lineId, quantity }: { lineId: string; quantity: number }): Promise<Cart | null> {
-  try {
-    const cartId = (await cookies()).get('cartId')?.value;
-    if (!cartId) return null;
-
-    if (quantity === 0) {
-      await removeCartLines(cartId, [lineId]);
-    } else {
-      await updateCartLines(cartId, [{ id: lineId, quantity }]);
-    }
-
-    const fresh = await getShopifyCart(cartId);
-    revalidateTag(TAGS.cart);
-    return adaptCart(fresh);
-  } catch (error) {
-    console.error('Error updating item:', error);
-    return null;
-  }
-}
-
-export async function createCartAndSetCookie() {
-  try {
-    const newCart = await createShopifyCart();
-
-    (await cookies()).set('cartId', newCart.id, {
+    const sessionId = Math.random().toString(36).substring(7);
+    const response = await backendAPI.createCart(sessionId);
+    const newCartId = response.data.id;
+    
+    cookieStore.set(CART_COOKIE, newCartId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
+    
+    console.log('Created new backend cart ID:', newCartId);
+    return newCartId;
+  }
+  
+  return cartId;
+}
 
-    return newCart;
+// Transform backend cart to frontend Cart type
+function transformCart(backendCart: any): Cart {
+  return {
+    id: backendCart.id,
+    checkoutUrl: `/checkout/${backendCart.id}`,
+    cost: {
+      subtotalAmount: {
+        amount: backendCart.totalPrice?.toString() || '0',
+        currencyCode: 'USD',
+      },
+      totalAmount: {
+        amount: backendCart.totalPrice?.toString() || '0',
+        currencyCode: 'USD',
+      },
+      totalTaxAmount: {
+        amount: '0',
+        currencyCode: 'USD',
+      },
+    },
+    lines: (backendCart.items || []).map((item: any) => ({
+      id: item.id,
+      quantity: item.quantity,
+      cost: {
+        totalAmount: {
+          amount: (item.price * item.quantity).toString(),
+          currencyCode: 'USD',
+        },
+      },
+      merchandise: {
+        id: item.variantId || item.productId,
+        title: item.variant?.title || item.product?.title || '',
+        selectedOptions: item.variant?.selectedOptions || [],
+        product: {
+          id: item.product.id,
+          handle: item.product.handle,
+          title: item.product.title,
+          categoryId: item.product.categoryId,
+          description: item.product.description || '',
+          descriptionHtml: item.product.descriptionHtml || '',
+          featuredImage: item.product.images?.[0] ? {
+            url: item.product.images[0].url,
+            altText: item.product.images[0].altText || item.product.title,
+            width: item.product.images[0].width || 800,
+            height: item.product.images[0].height || 800,
+          } : {
+            url: '',
+            altText: item.product.title,
+            width: 800,
+            height: 800,
+          },
+          currencyCode: 'USD',
+          priceRange: {
+            minVariantPrice: {
+              amount: item.price.toString(),
+              currencyCode: 'USD',
+            },
+            maxVariantPrice: {
+              amount: item.price.toString(),
+              currencyCode: 'USD',
+            },
+          },
+          seo: {
+            title: item.product.title,
+            description: item.product.description || '',
+          },
+          options: [],
+          tags: item.product.tags || [],
+          variants: [],
+          images: item.product.images || [],
+          availableForSale: true,
+        },
+        price: {
+          amount: item.price.toString(),
+          currencyCode: 'USD',
+        },
+      },
+    })),
+    totalQuantity: backendCart.totalItems || 0,
+  };
+}
+
+// Get cart
+export async function getCart(): Promise<Cart | null> {
+  try {
+    const cartId = (await cookies()).get(CART_COOKIE)?.value;
+    
+    if (!cartId) {
+      return null;
+    }
+    
+    // Backend expects sessionId or userId for GET /cart
+    // We use cartId as sessionId since we store cartId in cookie
+    const response = await backendAPI.getCart(cartId);
+    return transformCart(response.data);
+  } catch (error) {
+    console.error('Error fetching cart:', error);
+    return null;
+  }
+}
+
+// Create cart and set cookie
+export async function createCartAndSetCookie(): Promise<Cart | null> {
+  try {
+    const sessionId = Math.random().toString(36).substring(7);
+    const response = await backendAPI.createCart(sessionId);
+    
+    (await cookies()).set(CART_COOKIE, response.data.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    
+    return transformCart(response.data);
   } catch (error) {
     console.error('Error creating cart:', error);
     return null;
   }
 }
 
-export async function getCart(): Promise<Cart | null> {
+// Add item to cart
+export async function addItem(variantId: string | undefined, productId: string | undefined): Promise<Cart | null> {
+  if (!variantId || !productId) return null;
+  
   try {
-    const cartId = (await cookies()).get('cartId')?.value;
-
-    if (!cartId) {
-      return null;
-    }
-    const fresh = await getShopifyCart(cartId);
-    return adaptCart(fresh);
+    const cartId = await getOrCreateCartId();
+    console.log('Cart ID:', cartId);
+    console.log('Adding item:', { productId, variantId });
+    
+    // Add item to cart
+    const response = await backendAPI.addToCart(cartId, {
+      productId: productId,
+      variantId: variantId,
+      quantity: 1,
+    });
+    
+    console.log('Add item response:', JSON.stringify(response, null, 2));
+    
+    revalidateTag(TAGS.cart);
+    const cart = transformCart(response.data);
+    console.log('Transformed cart:', JSON.stringify(cart, null, 2));
+    return cart;
   } catch (error) {
-    console.error('Error fetching cart:', error);
+    console.error('Error adding item to cart:', error);
+    return null;
+  }
+}
+
+// Update cart item quantity
+export async function updateItem({ lineId, quantity }: { 
+  lineId: string; 
+  quantity: number 
+}): Promise<Cart | null> {
+  try {
+    const cartId = (await cookies()).get(CART_COOKIE)?.value;
+    if (!cartId) return null;
+    
+    const response = await backendAPI.updateCartItem(cartId, lineId, quantity);
+    
+    revalidateTag(TAGS.cart);
+    return transformCart(response.data);
+  } catch (error) {
+    console.error('Error updating item:', error);
     return null;
   }
 }

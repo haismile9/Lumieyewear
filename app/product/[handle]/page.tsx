@@ -23,6 +23,7 @@ import { PageLayout } from '@/components/layout/page-layout';
 import { VariantSelectorSlots } from './components/variant-selector-slots';
 import { MobileGallerySlider } from './components/mobile-gallery-slider';
 import { DesktopGallery } from './components/desktop-gallery';
+import { ProductReviews } from '@/components/products/product-reviews';
 
 // Generate static params for all products at build time
 export async function generateStaticParams() {
@@ -82,7 +83,8 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
 
   if (!product) return notFound();
 
-  const collection = product.categoryId ? await getCollection(product.categoryId) : null;
+  // Get collection by category handle if available (product.category has handle field)
+  const collection = product.category?.handle ? await getCollection(product.category.handle) : null;
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -203,6 +205,11 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
             className="col-span-full mb-auto opacity-70 max-md:order-3 max-md:my-6"
             html={product.descriptionHtml}
           />
+
+          {/* Product Reviews */}
+          <div className="col-span-full max-md:order-4 my-8">
+            <ProductReviews productId={product.id} />
+          </div>
 
           <SidebarLinks className="flex-col-reverse max-md:hidden py-sides w-full max-w-[408px] pr-sides max-md:pr-0 max-md:py-0" />
         </div>
