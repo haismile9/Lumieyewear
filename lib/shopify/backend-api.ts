@@ -3,20 +3,66 @@
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5001/api';
 
+// Helper to get auth token from Redux store (in-memory, faster and more reliable)
+const getToken = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      // Try to get token from Redux Persist localStorage
+      const persistRoot = localStorage.getItem('persist:root');
+      if (persistRoot) {
+        const parsed = JSON.parse(persistRoot);
+        if (parsed.auth) {
+          const authState = JSON.parse(parsed.auth);
+          if (authState.token) {
+            console.log('✅ [getToken] Token found in Redux persist:', authState.token.substring(0, 20) + '...');
+            return authState.token;
+          }
+        }
+      }
+      
+      // Fallback: direct localStorage token (for backward compatibility)
+      const directToken = localStorage.getItem('token');
+      if (directToken) {
+        console.log('✅ [getToken] Token found in direct localStorage');
+        return directToken;
+      }
+
+      console.log('⚠️  [getToken] No token found in any storage');
+      return null;
+    } catch (error) {
+      console.error('❌ [getToken] Error getting token:', error);
+      return null;
+    }
+  }
+  return null;
+};
+
 // Generic fetch wrapper for backend API
 async function backendFetch<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit & { requiresAuth?: boolean }
 ): Promise<T> {
   try {
     const url = `${BACKEND_API_URL}${endpoint}`;
+    const token = getToken();
+    const requiresAuth = options?.requiresAuth ?? false;
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options?.headers as Record<string, string> || {}),
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      console.log('🔐 [backendAPI] Authenticated request to:', endpoint);
+    } else if (requiresAuth) {
+      console.warn('⚠️  [backendAPI] Auth required but no token found for:', endpoint);
+    }
+    // Removed warning for public endpoints to reduce noise
     
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
       next: { revalidate: 60 }, // ISR - revalidate every 60 seconds
     });
 

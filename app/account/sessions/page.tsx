@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,18 +19,19 @@ interface Session {
 }
 
 export default function SessionsPage() {
+  const router = useRouter();
+  const token = useAppSelector((state) => state.auth.token);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [token]);
 
   const fetchSessions = async () => {
-    const token = localStorage.getItem('token');
     if (!token) {
-      window.location.href = '/login';
+      router.push('/login');
       return;
     }
 
@@ -53,7 +56,6 @@ export default function SessionsPage() {
   };
 
   const revokeSession = async (sessionId: string) => {
-    const token = localStorage.getItem('token');
     if (!token) return;
 
     setRevoking(sessionId);

@@ -27,10 +27,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      console.log('🔐 Logging in with email:', email);
       const result = await dispatch(loginUser({ email, password })).unwrap();
+      console.log('✅ Login successful:', result);
+      console.log('👤 User role:', result.user?.role);
+      
       // Login successful, redirect
       router.push('/');
     } catch (err: any) {
+      console.error('❌ Login failed:', err);
       setError(err || 'An error occurred during login');
     } finally {
       setLoading(false);

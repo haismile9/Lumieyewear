@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,15 +16,17 @@ interface UserStats {
 }
 
 export default function AccountPage() {
+  const router = useRouter();
+  const token = useAppSelector((state) => state.auth.token);
+  const reduxUser = useAppSelector((state) => state.auth.user);
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<UserStats>({ orders: 0, addresses: 0, wishlist: 0, reviews: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem('token');
       if (!token) {
-        window.location.href = '/login';
+        router.push('/login');
         return;
       }
 
@@ -50,15 +54,18 @@ export default function AccountPage() {
         });
       } catch (error) {
         console.error('Error fetching user:', error);
+        // Clear all auth data
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        localStorage.removeItem('user');
+        localStorage.removeItem('persist:root');
+        router.push('/login');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [token, router]);
 
   if (loading) {
     return (

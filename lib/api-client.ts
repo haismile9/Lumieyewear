@@ -2,10 +2,27 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5002/api';
 
-// Helper to get auth token
+// Helper to get auth token from Redux Persist storage
 const getToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
+    try {
+      // Try to get token from Redux Persist first
+      const persistRoot = localStorage.getItem('persist:root');
+      if (persistRoot) {
+        const parsed = JSON.parse(persistRoot);
+        if (parsed.auth) {
+          const authState = JSON.parse(parsed.auth);
+          if (authState.token) {
+            return authState.token;
+          }
+        }
+      }
+      // Fallback to direct localStorage token (for backward compatibility)
+      return localStorage.getItem('token');
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
   }
   return null;
 };
@@ -23,7 +40,10 @@ async function apiRequest<T>(
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+    console.log('🔐 [API] Authenticated request to:', endpoint);
   }
+  
+  console.log('📡 [API] Request:', options.method || 'GET', endpoint);
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,

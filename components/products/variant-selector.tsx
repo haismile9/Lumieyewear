@@ -13,7 +13,9 @@ import { getShopifyProductId } from '@/lib/shopify/utils';
 type Combination = {
   id: string;
   availableForSale: boolean;
-  [key: string]: string | boolean;
+  inventoryQuantity?: number;
+  inventoryPolicy?: string;
+  [key: string]: string | boolean | number | undefined;
 };
 
 const variantOptionSelectorVariants = cva('flex items-start gap-4', {
@@ -50,17 +52,72 @@ export function VariantOptionSelectorComponent({
   const optionNameLowerCase = option.name.toLowerCase();
 
   const combinations: Combination[] = Array.isArray(variants)
-    ? variants.map(variant => ({
-        id: variant.id,
-        availableForSale: variant.availableForSale,
-        ...variant.selectedOptions.reduce(
-          (accumulator, option) => ({
-            ...accumulator,
-            [option.name.toLowerCase()]: option.value,
-          }),
-          {}
-        ),
-      }))
+    ? variants.map(variant => {
+        // KIỂM TRA TÍNH KHẢ DỤNG CỦA VARIANT
+        // =====================================
+        
+        // Bước 1: Kiểm tra flags availability ở level product và variant
+        const productAvailable = product.availableForSale !== false; // Default true nếu không set
+        const variantAvailable = variant.availableForSale !== false; // Default true nếu không set
+        
+        if (!productAvailable || !variantAvailable) {
+          // Nếu product hoặc variant bị tắt → không bán
+          return {
+            id: variant.id,
+            availableForSale: false,
+            inventoryQuantity: variant.inventoryQuantity,
+            inventoryPolicy: variant.inventoryPolicy,
+            ...variant.selectedOptions.reduce(
+              (accumulator, option) => ({
+                ...accumulator,
+                [option.name.toLowerCase()]: option.value,
+              }),
+              {}
+            ),
+          };
+        }
+        
+        // Bước 2: Kiểm tra inventory availability (5 RULES)
+const { inventoryPolicy, inventoryQuantity } = variant;
+let inventoryAvailable = true;
+
+// RULE 1: CONTINUE policy = cho phép overselling, luôn available
+if (inventoryPolicy === 'CONTINUE') {
+  inventoryAvailable = true;
+}
+// RULE 2: DENY policy nhưng KHÔNG có dữ liệu inventory = UNSAFE, phải disable
+else if (inventoryPolicy === 'DENY' && inventoryQuantity == null) {
+  inventoryAvailable = false;
+}
+// RULE 3: DENY policy + có số liệu inventory = kiểm tra stock
+else if (inventoryPolicy === 'DENY') {
+  inventoryAvailable = (inventoryQuantity ?? 0) > 0;
+}
+// RULE 4: Không có policy (undefined/null) = legacy inventory
+else if (inventoryPolicy == null) {
+  // Default to available nếu không track, ngược lại check stock
+  inventoryAvailable = (inventoryQuantity ?? 1) > 0;
+}
+// RULE 5: Policy khác (unknown) = fallback an toàn
+else {
+  // Unknown policy -> assume available nếu không có data
+  inventoryAvailable = inventoryQuantity == null ? true : (inventoryQuantity ?? 0) > 0;
+}
+        
+        return {
+          id: variant.id,
+          availableForSale: inventoryAvailable,
+          inventoryQuantity: variant.inventoryQuantity,
+          inventoryPolicy: variant.inventoryPolicy,
+          ...variant.selectedOptions.reduce(
+            (accumulator, option) => ({
+              ...accumulator,
+              [option.name.toLowerCase()]: option.value,
+            }),
+            {}
+          ),
+        };
+      })
     : [];
 
   const isColorOption = optionNameLowerCase === 'color';
@@ -73,15 +130,28 @@ export function VariantOptionSelectorComponent({
           const currentState = selectedOptions;
           const optionParams = {
             ...currentState,
-            [optionNameLowerCase]: value.id,
+            [optionNameLowerCase]: value.name, // Use value.name, not value.id
           };
 
           const filtered = Object.entries(optionParams).filter(([key, value]) =>
             options.find(option => option.name.toLowerCase() === key && option.values.some(val => val.name === value))
           );
-          const isAvailableForSale = combinations.find(combination =>
-            filtered.every(([key, value]) => combination[key] === value && combination.availableForSale)
+          const matchedVariant = combinations.find(combination =>
+            filtered.every(([key, value]) => combination[key] === value)
           );
+          const isAvailableForSale = matchedVariant?.availableForSale;
+          
+          // Build tooltip message
+          let tooltipMessage = `${option.name} ${value.name}`;
+          if (!isAvailableForSale && matchedVariant) {
+            if (matchedVariant.inventoryQuantity != null && matchedVariant.inventoryQuantity <= 0) {
+              tooltipMessage += ' (Hết hàng)';
+            } else {
+              tooltipMessage += ' (Không khả dụng)';
+            }
+          } else if (matchedVariant && matchedVariant.inventoryQuantity != null && matchedVariant.inventoryQuantity > 0 && matchedVariant.inventoryQuantity <= 5) {
+            tooltipMessage += ` (Còn ${matchedVariant.inventoryQuantity} sản phẩm)`;
+          }
 
           const isActive = isTargetingProduct && selectedValue === value.name;
 
@@ -90,21 +160,29 @@ export function VariantOptionSelectorComponent({
             const name = value.name.split('/');
 
             return (
-              <ColorSwatch
-                key={value.id}
-                color={
-                  Array.isArray(color)
-                    ? [
-                        { name: name[0], value: color[0] },
-                        { name: name[1], value: color[1] },
-                      ]
-                    : { name: name[0], value: color }
-                }
-                isSelected={isActive}
-                onColorChange={() => onSelect?.(value.name)}
-                size={variant === 'condensed' ? 'sm' : 'md'}
-                atLeastOneColorSelected={!!selectedValue}
-              />
+              <div key={value.id} className={`relative ${!isAvailableForSale ? 'opacity-40 cursor-not-allowed' : ''}`}>
+                <ColorSwatch
+                  color={
+                    Array.isArray(color)
+                      ? [
+                          { name: name[0], value: color[0] },
+                          { name: name[1], value: color[1] },
+                        ]
+                      : { name: name[0], value: color }
+                  }
+                  isSelected={isActive}
+                  onColorChange={() => isAvailableForSale && onSelect?.(value.name)}
+                  size={variant === 'condensed' ? 'sm' : 'md'}
+                  atLeastOneColorSelected={!!selectedValue}
+                />
+                {!isAvailableForSale && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <svg className="w-full h-full" viewBox="0 0 24 24">
+                      <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" strokeWidth="2" className="text-destructive" />
+                    </svg>
+                  </div>
+                )}
+              </div>
             );
           }
 
@@ -115,10 +193,23 @@ export function VariantOptionSelectorComponent({
               variant={isActive ? 'default' : 'outline'}
               size="sm"
               disabled={!isAvailableForSale}
-              title={`${option.name} ${value.name}${!isAvailableForSale ? ' (Out of Stock)' : ''}`}
-              className="min-w-[40px]"
+              title={tooltipMessage}
+              className={`min-w-[40px] relative ${
+                !isAvailableForSale ? 'opacity-50' : 
+                matchedVariant && matchedVariant.inventoryQuantity != null && matchedVariant.inventoryQuantity > 0 && matchedVariant.inventoryQuantity <= 5 ? 'ring-1 ring-orange-400' : ''
+              }`}
             >
-              {value.name}
+              <span className={!isAvailableForSale ? 'line-through' : ''}>
+                {value.name}
+              </span>
+              {!isAvailableForSale && (
+                <span className="absolute -top-1 -right-1 text-xs text-destructive font-bold">✕</span>
+              )}
+              {isAvailableForSale && matchedVariant && matchedVariant.inventoryQuantity != null && matchedVariant.inventoryQuantity > 0 && matchedVariant.inventoryQuantity <= 5 && (
+                <span className="absolute -top-1 -right-1 text-[10px] bg-orange-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                  {matchedVariant.inventoryQuantity}
+                </span>
+              )}
             </Button>
           );
         })}

@@ -73,15 +73,15 @@ const CartItems = ({ closeCart }: { closeCart: () => void }) => {
 export default function CartModal() {
   const cart = useAppSelector((state) => state.cart);
   const [isOpen, setIsOpen] = useState(false);
-  const prevItemCountRef = useRef(0);
+  const prevItemCountRef = useRef(cart?.totalItems || 0);
 
   useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!cart) return;
 
-    // Open cart when items are added
-    if (cart.totalItems > prevItemCountRef.current) {
+    // Open cart when items are added (not on initial load)
+    if (cart.totalItems > prevItemCountRef.current && prevItemCountRef.current > 0) {
       setIsOpen(true);
     }
     prevItemCountRef.current = cart.totalItems;
@@ -135,7 +135,7 @@ export default function CartModal() {
   return (
     <>
       <Button aria-label="Open cart" onClick={openCart} className="uppercase" size={'sm'}>
-        <span className="max-md:hidden">cart</span> ({cart?.totalQuantity || 0})
+        <span className="max-md:hidden">cart</span> ({cart?.totalItems || 0})
       </Button>
       <AnimatePresence>
         {isOpen && (

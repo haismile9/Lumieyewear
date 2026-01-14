@@ -90,5 +90,13 @@
     "postcss": "^8.5",
     "tailwindcss": "^4.1.13",
     "typescript": "^5"
-  }
+  },
+  "description": "*Automatically synced with your [v0.app](https://v0.app) deployments*",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

@@ -10,6 +10,22 @@ import { getOrCreateSessionId, getStoredCartId, storeCartId, transformCartRespon
 
 export function ReduxProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    // Expose Redux state to window for backend-api.ts to access
+    if (typeof window !== 'undefined') {
+      // @ts-ignore
+      window.__REDUX_STATE__ = store.getState();
+      
+      // Update window.__REDUX_STATE__ whenever store changes
+      const unsubscribe = store.subscribe(() => {
+        // @ts-ignore
+        window.__REDUX_STATE__ = store.getState();
+      });
+
+      return () => unsubscribe();
+    }
+  }, []);
+
+  useEffect(() => {
     // Fetch user on app load if token exists
     const state = store.getState();
     if (state.auth.token && !state.auth.user) {

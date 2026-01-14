@@ -185,6 +185,8 @@ export type ProductVariant = {
   availableForSale: boolean;
   selectedOptions: SelectedOptions;
   price: Money;
+  inventoryQuantity?: number;
+  inventoryPolicy?: 'DENY' | 'CONTINUE';
 };
 
 export type ProductOption = {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -11,6 +12,7 @@ import { CheckCircle, AlertCircle, Loader2, Mail } from 'lucide-react';
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const userToken = useAppSelector((state) => state.auth.token);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const [token, setToken] = useState('');
@@ -56,8 +58,7 @@ function VerifyEmailContent() {
   };
 
   const handleResendVerification = async () => {
-    // This would need a token from localStorage if user is logged in
-    const userToken = localStorage.getItem('token');
+    // This would need a token from Redux state if user is logged in
     if (!userToken) {
       router.push('/login');
       return;

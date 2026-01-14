@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +18,8 @@ interface WishlistItem {
 }
 
 export default function WishlistPage() {
+  const router = useRouter();
+  const token = useAppSelector((state) => state.auth.token);
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -25,12 +29,11 @@ export default function WishlistPage() {
 
   useEffect(() => {
     fetchWishlist();
-  }, [page]);
+  }, [page, token]);
 
   const fetchWishlist = async () => {
-    const token = localStorage.getItem('token');
     if (!token) {
-      window.location.href = '/login';
+      router.push('/login');
       return;
     }
 
@@ -58,7 +61,6 @@ export default function WishlistPage() {
   };
 
   const removeItem = async (productId: string) => {
-    const token = localStorage.getItem('token');
     if (!token) return;
 
     setRemoving(productId);
@@ -126,7 +128,7 @@ export default function WishlistPage() {
             <Link href={`/product/${item.product.handle}`}>
               <div className="relative aspect-square">
                 <Image
-                  src={item.product.featuredImage?.url || '/placeholder.png'}
+                  src={item.product.images?.[0]?.url || '/placeholder.png'}
                   alt={item.product.title}
                   fill
                   className="object-cover"
@@ -140,7 +142,10 @@ export default function WishlistPage() {
                 </h3>
               </Link>
               <p className="text-lg font-bold mb-4">
-                {formatPrice(item.product.priceRange.minVariantPrice.amount, item.product.priceRange.minVariantPrice.currencyCode)}
+                {formatPrice(
+                  item.product.variants?.[0]?.price || item.product.price || 0,
+                  'VND'
+                )}
               </p>
               <Button
                 variant="destructive"

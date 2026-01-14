@@ -24,6 +24,7 @@ import { VariantSelectorSlots } from './components/variant-selector-slots';
 import { MobileGallerySlider } from './components/mobile-gallery-slider';
 import { DesktopGallery } from './components/desktop-gallery';
 import { ProductReviews } from '@/components/products/product-reviews';
+import { WishlistButton } from '@/components/products/wishlist-button';
 
 // Generate static params for all products at build time
 export async function generateStaticParams() {
@@ -178,25 +179,30 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
                   <VariantSelectorSlots product={product} />
                 </Suspense>
 
-                <Suspense
-                  fallback={
-                    <AddToCartButton
-                      className={cn('w-full', {
-                        'col-span-full': !hasVariants || hasEvenOptions,
-                      })}
+                <div className={cn('flex gap-2', {
+                  'col-span-full': !hasVariants || hasEvenOptions,
+                })}>
+                  <Suspense
+                    fallback={
+                      <AddToCartButton
+                        className="flex-1"
+                        product={product}
+                        size="lg"
+                      />
+                    }
+                  >
+                    <AddToCart
                       product={product}
                       size="lg"
+                      className="flex-1"
                     />
-                  }
-                >
-                  <AddToCart
-                    product={product}
-                    size="lg"
-                    className={cn('w-full', {
-                      'col-span-full': !hasVariants || hasEvenOptions,
-                    })}
+                  </Suspense>
+                  <WishlistButton 
+                    productId={product.id} 
+                    size="lg" 
+                    variant="outline"
                   />
-                </Suspense>
+                </div>
               </div>
             </div>
           </div>

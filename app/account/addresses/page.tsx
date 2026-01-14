@@ -153,13 +153,83 @@ export default function AddressesPage() {
           <h2 className="text-2xl font-bold">Địa chỉ của tôi</h2>
           <p className="text-muted-foreground">Quản lý địa chỉ giao hàng</p>
         </div>
+        <Button onClick={() => openDialog()} className="relative z-10">
+          <Plus className="mr-2 h-4 w-4" />
+          Thêm địa chỉ mới
+        </Button>
+      </div>
+
+      {addresses.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-lg font-medium mb-2">Chưa có địa chỉ nào</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Thêm địa chỉ để giao hàng nhanh hơn
+            </p>
+            
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {addresses.map((address) => (
+            <Card key={address.id}>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-base">
+                    {address.firstName} {address.lastName}
+                  </CardTitle>
+                  {address.isDefault && (
+                    <Badge variant="secondary">
+                      <Check className="mr-1 h-3 w-3" />
+                      Mặc định
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription>{address.phone}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm">
+                  <p>{address.address1}</p>
+                  {address.address2 && <p>{address.address2}</p>}
+                  <p>
+                    {address.city}, {address.province} {address.zip}
+                  </p>
+                  <p>{address.country}</p>
+                </div>
+                <div className="flex gap-2">
+                  {!address.isDefault && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDefaultAddress(address.id)}
+                    >
+                      Đặt làm mặc định
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => openDialog(address)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteAddress(address.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {dialogOpen && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => openDialog()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm địa chỉ mới
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -259,78 +329,6 @@ export default function AddressesPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {addresses.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-2">Chưa có địa chỉ nào</p>
-            <p className="text-sm text-muted-foreground mb-6">
-              Thêm địa chỉ để giao hàng nhanh hơn
-            </p>
-            <Button onClick={() => openDialog()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm địa chỉ
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {addresses.map((address) => (
-            <Card key={address.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-base">
-                    {address.firstName} {address.lastName}
-                  </CardTitle>
-                  {address.isDefault && (
-                    <Badge variant="secondary">
-                      <Check className="mr-1 h-3 w-3" />
-                      Mặc định
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription>{address.phone}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm">
-                  <p>{address.address1}</p>
-                  {address.address2 && <p>{address.address2}</p>}
-                  <p>
-                    {address.city}, {address.province} {address.zip}
-                  </p>
-                  <p>{address.country}</p>
-                </div>
-                <div className="flex gap-2">
-                  {!address.isDefault && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDefaultAddress(address.id)}
-                    >
-                      Đặt làm mặc định
-                    </Button>
-                  )}
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => openDialog(address)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteAddress(address.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       )}
     </div>
   );

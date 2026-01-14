@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +22,8 @@ interface Order {
 }
 
 export default function OrdersPage() {
+  const router = useRouter();
+  const token = useAppSelector((state) => state.auth.token);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -28,12 +32,11 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [page]);
+  }, [page, token]);
 
   const fetchOrders = async () => {
-    const token = localStorage.getItem('token');
     if (!token) {
-      window.location.href = '/login';
+      router.push('/login');
       return;
     }
 
@@ -159,7 +162,7 @@ export default function OrdersPage() {
 
                 <div className="flex gap-2">
                   <Button asChild variant="outline" size="sm" className="flex-1">
-                    <Link href={`/track-order?orderNumber=${order.orderNumber}`}>
+                    <Link href={`/account/orders/${order.orderNumber}`}>
                       <Eye className="mr-2 h-4 w-4" />
                       Xem chi tiết
                     </Link>

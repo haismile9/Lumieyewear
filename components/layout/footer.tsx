@@ -2,9 +2,27 @@ import { LogoSvg } from './header/logo-svg';
 import { ShopLinks } from './shop-links';
 import { SidebarLinks } from './sidebar/product-sidebar-links';
 import { getCollections } from '@/lib/shopify';
+import Link from 'next/link';
+
+async function getCMSPages() {
+  try {
+    const response = await fetch('http://127.0.0.1:5002/api/pages', {
+      next: { revalidate: 3600 },
+    });
+    
+    if (!response.ok) return [];
+    
+    const data = await response.json();
+    return (data.pages || data.data || []).filter((page: any) => page.status === 'PUBLISHED');
+  } catch (error) {
+    console.error('Error fetching CMS pages:', error);
+    return [];
+  }
+}
 
 export async function Footer() {
   const collections = await getCollections();
+  const cmsPages = await getCMSPages();
 
   return (
     <footer className="p-sides">
@@ -18,7 +36,22 @@ export async function Footer() {
           <span className="mt-3 italic font-semibold md:hidden">Refined. Minimal. Never boring.</span>
         </div>
         <div className="flex justify-between max-md:contents text-muted-foreground">
-          <SidebarLinks className="max-w-[450px] w-full max-md:flex-col" size="base" invert />
+          <div className="flex flex-col md:flex-row gap-4 max-w-[450px] w-full">
+            <SidebarLinks className="max-md:flex-col" size="base" invert />
+            {cmsPages.length > 0 && (
+              <div className="flex flex-row gap-2 md:ml-4">
+                {cmsPages.slice(0, 3).map((page: any) => (
+                  <Link
+                    key={page.id}
+                    href={`/pages/${page.handle}`}
+                    className="text-sm 2xl:text-base leading-tight transition-colors hover:underline ease-out duration-200 whitespace-nowrap text-background/50 hover:text-background"
+                  >
+                    {page.title}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           <p className="text-base">{new Date().getFullYear()}© — All rights reserved</p>
         </div>
       </div>

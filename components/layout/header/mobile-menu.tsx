@@ -13,9 +13,10 @@ import { useBodyScrollLock } from '@/lib/hooks/use-body-scroll-lock';
 
 interface MobileMenuProps {
   collections: Collection[];
+  cmsPages?: any[];
 }
 
-export default function MobileMenu({ collections }: MobileMenuProps) {
+export default function MobileMenu({ collections, cmsPages = [] }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const openMobileMenu = () => setIsOpen(true);
@@ -93,6 +94,20 @@ export default function MobileMenu({ collections }: MobileMenuProps) {
                     >
                       <Link href={item.href} prefetch>
                         {item.label}
+                      </Link>
+                    </Button>
+                  ))}
+                  {cmsPages.map((page: any) => (
+                    <Button
+                      key={page.id}
+                      size="sm"
+                      variant="secondary"
+                      onClick={closeMobileMenu}
+                      className="justify-start bg-background/50"
+                      asChild
+                    >
+                      <Link href={`/pages/${page.handle}`} prefetch>
+                        {page.title}
                       </Link>
                     </Button>
                   ))}

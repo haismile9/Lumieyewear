@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ interface ProductReviewsProps {
 }
 
 export function ProductReviews({ productId }: ProductReviewsProps) {
+  const token = useAppSelector((state) => state.auth.token);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,7 +70,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
     setError('');
     setSuccess('');
 
-    const token = localStorage.getItem('token');
     if (!token) {
       setError('Vui lòng đăng nhập để đánh giá');
       return;
@@ -151,9 +152,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               </div>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>Viết đánh giá</Button>
-              </DialogTrigger>
+              
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Viết đánh giá của bạn</DialogTitle>

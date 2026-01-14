@@ -16,6 +16,22 @@ const V0Setup = dynamic(() => import('@/components/v0-setup'));
 
 const isV0 = process.env['VERCEL_URL']?.includes('vusercontent.net') ?? false;
 
+async function getCMSPages() {
+  try {
+    const response = await fetch('http://127.0.0.1:5002/api/pages', {
+      next: { revalidate: 3600 },
+    });
+    
+    if (!response.ok) return [];
+    
+    const data = await response.json();
+    return (data.pages || data.data || []).filter((page: any) => page.status === 'PUBLISHED');
+  } catch (error) {
+    console.error('Error fetching CMS pages:', error);
+    return [];
+  }
+}
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -38,6 +54,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const collections = await getCollections();
+  const cmsPages = await getCMSPages();
 
   return (
     <html lang="en">
@@ -49,7 +66,7 @@ export default async function RootLayout({
           <ReduxProvider>
             <NuqsAdapter>
               <main data-vaul-drawer-wrapper="true">
-                <Header collections={collections} />
+                <Header collections={collections} cmsPages={cmsPages} />
                 {children}
               </main>
               {isDevelopment && <DebugGrid />}

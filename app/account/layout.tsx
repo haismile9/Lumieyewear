@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logout as logoutAction } from '@/store/slices/authSlice';
 
 const accountLinks = [
   {
@@ -61,10 +63,10 @@ export default function AccountLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const token = useAppSelector((state) => state.auth.token);
 
   const handleLogout = async () => {
-    const token = localStorage.getItem('token');
-    
     if (token) {
       try {
         await fetch('http://127.0.0.1:5002/api/auth/logout', {
@@ -78,8 +80,15 @@ export default function AccountLayout({
       }
     }
     
+    // Dispatch logout action to clear Redux state
+    dispatch(logoutAction());
+    
+    // Clear all localStorage items
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('persist:root'); // Clear Redux Persist
+    
+    // Redirect to login
     router.push('/login');
   };
 

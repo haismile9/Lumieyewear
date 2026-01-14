@@ -21,6 +21,10 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* Brand Colors */
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-purple: var(--brand-purple);
+
   /* Spacing */
   --spacing-sides: var(--sides);
   --spacing-modal-sides: var(--modal-sides);
@@ -75,6 +79,9 @@
   --border: oklch(0.7974 0 0);
   --input: oklch(0.9234 0 0);
   --ring: oklch(0.7079 0 0);
+
+  --brand-yellow: #ffde59;
+  --brand-purple: #1800ad;
 
   --radius: 0.5rem;
   --sides: 1rem;

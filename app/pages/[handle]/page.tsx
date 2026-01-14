@@ -17,8 +17,9 @@ async function getPage(handle: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { handle: string } }) {
-  const page = await getPage(params.handle);
+export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
+  const page = await getPage(handle);
 
   if (!page) {
     return {
@@ -27,15 +28,16 @@ export async function generateMetadata({ params }: { params: { handle: string } 
   }
 
   return {
-    title: page.metaTitle || page.title,
-    description: page.metaDescription || page.content.substring(0, 155),
+    title: page.seoTitle || page.title,
+    description: page.seoDescription || page.bodySummary || page.body?.substring(0, 155) || '',
   };
 }
 
-export default async function PageDetail({ params }: { params: { handle: string } }) {
-  const page = await getPage(params.handle);
+export default async function PageDetail({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
+  const page = await getPage(handle);
 
-  if (!page || page.status !== 'published') {
+  if (!page || page.status !== 'PUBLISHED') {
     notFound();
   }
 
@@ -44,15 +46,15 @@ export default async function PageDetail({ params }: { params: { handle: string 
       <article className="prose prose-lg max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-6">{page.title}</h1>
         
-        {page.publishedAt && (
+        {page.updatedAt && (
           <p className="text-sm text-muted-foreground mb-8">
-            Cập nhật: {new Date(page.publishedAt).toLocaleDateString('vi-VN')}
+            Cập nhật: {new Date(page.updatedAt).toLocaleDateString('vi-VN')}
           </p>
         )}
 
         <div 
           className="prose-headings:font-bold prose-a:text-primary prose-img:rounded-lg"
-          dangerouslySetInnerHTML={{ __html: page.content }}
+          dangerouslySetInnerHTML={{ __html: page.body }}
         />
       </article>
     </div>

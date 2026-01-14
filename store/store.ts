@@ -1,9 +1,27 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 import authReducer from './slices/authSlice';
 import cartReducer from './slices/cartSlice';
 import { apiSlice } from './api/apiSlice';
+
+// Create a noop storage for SSR
+const createNoopStorage = () => {
+  return {
+    getItem(_key: string) {
+      return Promise.resolve(null);
+    },
+    setItem(_key: string, value: any) {
+      return Promise.resolve(value);
+    },
+    removeItem(_key: string) {
+      return Promise.resolve();
+    },
+  };
+};
+
+// Use localStorage on client, noop on server
+const storage = typeof window !== 'undefined' ? createWebStorage('local') : createNoopStorage();
 
 // Persist config
 const persistConfig = {

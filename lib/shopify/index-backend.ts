@@ -66,6 +66,8 @@ function transformBackendProduct(backendProduct: any): Product {
     id: variant.id,
     title: variant.title,
     availableForSale: variant.availableForSale,
+    inventoryQuantity: variant.inventoryQuantity,
+    inventoryPolicy: variant.inventoryPolicy as 'DENY' | 'CONTINUE' | undefined,
     price: {
       amount: String(variant.price?.amount || variant.price || '0'),
       currencyCode: variant.price?.currencyCode || backendProduct.currencyCode || 'USD',

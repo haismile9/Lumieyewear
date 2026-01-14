@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppDispatch } from '@/store/hooks';
+import { clearCart } from '@/store/slices/cartSlice';
 import backendAPI from '@/lib/shopify/backend-api';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,11 +15,16 @@ export default function OrderSuccessPage({
   params: Promise<{ orderNumber: string }> 
 }) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Clear Redux cart state when accessing order success page
+    dispatch(clearCart());
+    console.log('✅ Redux cart cleared on order success page');
+    
     async function loadOrder() {
       try {
         const { orderNumber } = await params;
