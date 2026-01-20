@@ -1,6 +1,18 @@
 // API client utilities for LUMI Web
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5002/api';
+const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://127.0.0.1:5002';
+
+// Helper to get full image URL
+export function getImageUrl(url: string): string {
+  if (!url) return '';
+  // If already absolute URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // Prepend base URL for relative paths
+  return `${IMAGE_BASE_URL}${url}`;
+}
 
 // Helper to get auth token from Redux Persist storage
 const getToken = () => {

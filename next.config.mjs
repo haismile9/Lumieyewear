@@ -23,6 +23,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'edge.disstg.commercecloud.salesforce.com',
       },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '5002',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5002',
+      },
     ],
   },
 };

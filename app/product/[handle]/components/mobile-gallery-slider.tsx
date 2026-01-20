@@ -6,6 +6,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { Product } from '@/lib/shopify/types';
 import { Badge } from '@/components/ui/badge';
 import { useProductImages, useSelectedVariant } from '@/components/products/variant-selector';
+import { getImageUrl } from '@/lib/api-client';
 
 interface MobileGallerySliderProps {
   product: Product;
@@ -57,7 +58,7 @@ export function MobileGallerySlider({ product }: MobileGallerySliderProps) {
                 style={{
                   aspectRatio: `${image.width} / ${image.height}`,
                 }}
-                src={image.url}
+                src={getImageUrl(image.url)}
                 alt={image.altText}
                 width={image.width}
                 height={image.height}

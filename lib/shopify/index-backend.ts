@@ -42,7 +42,7 @@ function transformBackendProduct(backendProduct: any): Product {
     altText: backendProduct.images?.[0]?.altText || backendProduct.title,
     width: backendProduct.images?.[0]?.width || 800,
     height: backendProduct.images?.[0]?.height || 800,
-    thumbhash: backendProduct.images?.[0]?.thumbhash,
+    thumbhash: backendProduct.images?.[0]?.blurhash || backendProduct.images?.[0]?.thumbhash,
   };
 
   const images: Image[] = (backendProduct.images || []).map((img: any) => ({
@@ -50,7 +50,7 @@ function transformBackendProduct(backendProduct: any): Product {
     altText: img.altText || backendProduct.title,
     width: img.width || 800,
     height: img.height || 800,
-    thumbhash: img.thumbhash,
+    thumbhash: img.blurhash || img.thumbhash,
   }));
 
   const options: ProductOption[] = (backendProduct.options || []).map((opt: any) => ({

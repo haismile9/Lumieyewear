@@ -3,6 +3,7 @@
 import { useProductImages, useSelectedVariant } from '@/components/products/variant-selector';
 import { Product } from '@/lib/shopify/types';
 import Image from 'next/image';
+import { getImageUrl } from '@/lib/api-client';
 
 export const DesktopGallery = ({ product }: { product: Product }) => {
   const selectedVariant = useSelectedVariant(product);
@@ -14,7 +15,7 @@ export const DesktopGallery = ({ product }: { product: Product }) => {
         aspectRatio: `${image.width} / ${image.height}`,
       }}
       key={`${image.url}-${image.selectedOptions?.map(o => `${o.name},${o.value}`).join('-')}`}
-      src={image.url}
+      src={getImageUrl(image.url)}
       alt={image.altText}
       width={image.width}
       height={image.height}
