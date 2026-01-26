@@ -129,7 +129,7 @@ function transformBackendCollection(backendCollection: any): Collection {
 export async function getCollections(): Promise<Collection[]> {
   'use cache';
   cacheTag(TAGS.collections);
-  cacheLife('minutes');
+  cacheLife('seconds');
 
   try {
     const response = await backendAPI.getCollections({ isVisible: true });
@@ -143,7 +143,7 @@ export async function getCollections(): Promise<Collection[]> {
 export async function getCollection(handle: string): Promise<Collection | null> {
   'use cache';
   cacheTag(TAGS.collections);
-  cacheLife('minutes');
+  cacheLife('seconds');
 
   try {
     const collection = await backendAPI.getCollection(handle);
@@ -157,7 +157,7 @@ export async function getCollection(handle: string): Promise<Collection | null> 
 export async function getProduct(handle: string): Promise<Product | null> {
   'use cache';
   cacheTag(TAGS.products);
-  cacheLife('minutes');
+  cacheLife('seconds');
 
   try {
     const product = await backendAPI.getProduct(handle);
@@ -176,7 +176,7 @@ export async function getProducts(params: {
 }): Promise<Product[]> {
   'use cache';
   cacheTag(TAGS.products);
-  cacheLife('minutes');
+  cacheLife('seconds');
 
   try {
     const sort = mapSortKey(params.sortKey);
@@ -202,7 +202,7 @@ export async function getCollectionProducts(params: {
 }): Promise<Product[]> {
   'use cache';
   cacheTag(TAGS.collectionProducts);
-  cacheLife('minutes');
+  cacheLife('seconds');
 
   try {
     const sort = mapSortKey(params.sortKey);

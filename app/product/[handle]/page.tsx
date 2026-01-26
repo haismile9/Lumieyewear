@@ -40,8 +40,8 @@ export async function generateStaticParams() {
   }
 }
 
-// Enable ISR with 1 minute revalidation
-export const revalidate = 60;
+// Enable ISR with 10 seconds revalidation for fresh product data
+export const revalidate = 10;
 
 export async function generateMetadata(props: { params: Promise<{ handle: string }> }): Promise<Metadata> {
   const params = await props.params;

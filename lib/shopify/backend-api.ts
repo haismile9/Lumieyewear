@@ -63,7 +63,7 @@ async function backendFetch<T>(
     const response = await fetch(url, {
       ...options,
       headers,
-      next: { revalidate: 60 }, // ISR - revalidate every 60 seconds
+      next: { revalidate: 5 }, // ISR - revalidate every 5 seconds for fresh data
     });
 
     if (!response.ok) {

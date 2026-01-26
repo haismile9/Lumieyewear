@@ -9,6 +9,15 @@ export const ProductImage = ({ product }: { product: Product }) => {
 
   const [variantImage] = useProductImages(product, selectedVariant?.selectedOptions);
 
+  // Don't render if no valid image
+  if (!variantImage || !variantImage.url) {
+    return (
+      <div className="flex items-center justify-center size-full bg-muted text-muted-foreground">
+        No Image
+      </div>
+    );
+  }
+
   return (
     <Image
       src={variantImage.url}

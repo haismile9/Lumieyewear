@@ -24,8 +24,8 @@ export const navItems: NavItem[] = [
     href: '/shop',
   },
   {
-    label: 'track order',
-    href: '/track-order',
+    label: 'order',
+    href: '/order',
   },
 ];
 
