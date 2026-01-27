@@ -13,3 +13,4 @@ const Prose = ({ html, className }: { html: string; className?: string }) => {
 };
 
 export default Prose;
+

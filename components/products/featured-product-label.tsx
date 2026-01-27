@@ -2,7 +2,7 @@
 
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import { AddToCart, AddToCartButton } from '../cart/add-to-cart';
 import { Suspense } from 'react';
 import Link from 'next/link';
@@ -89,3 +89,4 @@ export function FeaturedProductLabel({
     </div>
   );
 }
+

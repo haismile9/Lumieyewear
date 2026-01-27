@@ -43,3 +43,4 @@ export function LogoSvg({ className }: { className?: string }) {
     />
   );
 }
+

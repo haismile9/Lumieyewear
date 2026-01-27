@@ -22,3 +22,4 @@ export function ColorSwatchSkeleton({ count = 6, className, size = 'md' }: Color
     </div>
   );
 }
+

@@ -14,3 +14,4 @@ export const sortOptions = [
 export const DEFAULT_PAGE_SIZE = 24;
 
 export const DEFAULT_SORT_KEY = 'RELEVANCE';
+

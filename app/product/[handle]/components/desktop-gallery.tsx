@@ -1,7 +1,7 @@
 'use client';
 
 import { useProductImages, useSelectedVariant } from '@/components/products/variant-selector';
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/api-client';
 

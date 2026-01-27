@@ -37,3 +37,4 @@ export function DeleteItemButton({ item }: { item: CartItem }) {
     </form>
   );
 }
+

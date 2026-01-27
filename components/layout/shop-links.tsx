@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Collection } from '@/lib/shopify/types';
+import { Collection } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 
 interface ShopLinksProps {
@@ -26,3 +26,4 @@ export function ShopLinks({ collections, label = 'Shop', align = 'left', classNa
     </div>
   );
 }
+

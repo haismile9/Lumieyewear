@@ -1,6 +1,6 @@
 import { DesktopFilters } from './components/shop-filters';
 import { Suspense } from 'react';
-import { getCollections } from '@/lib/shopify';
+import { getCollections } from '@/lib/api';
 import { PageLayout } from '@/components/layout/page-layout';
 import { MobileFilters } from './components/mobile-filters';
 import { ProductsProvider } from './providers/products-provider';
@@ -29,3 +29,4 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
     </PageLayout>
   );
 }
+

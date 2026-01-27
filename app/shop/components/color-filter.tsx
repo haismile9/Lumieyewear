@@ -2,7 +2,7 @@
 
 import { ColorPicker } from '@/components/ui/color-picker';
 import { ColorSwatchSkeleton } from '@/components/ui/color-swatch-skeleton';
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 import { useAvailableColors } from '../hooks/use-available-colors';
 import { useColorFilterCount } from '../hooks/use-filter-count';
@@ -35,3 +35,4 @@ export function ColorFilter({ products = [], className }: ColorFilterProps) {
     )
   );
 }
+

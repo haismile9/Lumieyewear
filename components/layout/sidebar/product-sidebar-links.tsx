@@ -39,3 +39,4 @@ export function SidebarLinks({ className, invert, size }: SidebarLinksProps) {
     </ul>
   );
 }
+

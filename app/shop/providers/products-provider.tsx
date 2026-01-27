@@ -1,6 +1,6 @@
 'use client';
 
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface ProductsContextType {
@@ -30,3 +30,4 @@ export function useProducts() {
   }
   return context;
 }
+

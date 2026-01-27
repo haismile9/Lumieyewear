@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { Product, Collection } from '@/lib/shopify/types';
+import { Product, Collection } from '@/lib/api/types';
 import { ProductCard } from './product-card';
 import ResultsControls from './results-controls';
 import { useProducts } from '../providers/products-provider';
@@ -109,3 +109,4 @@ export function ProductListContent({ products, collections }: ProductListContent
     </>
   );
 }
+

@@ -77,3 +77,4 @@ export function extractProductId(shopifyId: string): string {
   const parts = shopifyId.split('/');
   return parts[parts.length - 1];
 }
+

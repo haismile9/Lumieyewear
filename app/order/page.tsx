@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import backendAPI from '@/lib/shopify/backend-api';
+import backendAPI from '@/lib/api/backend-api';
 
-export default function TrackOrderPage() {
+export default function OrderPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     orderNumber: '',
@@ -148,3 +148,4 @@ export default function TrackOrderPage() {
     </div>
   );
 }
+

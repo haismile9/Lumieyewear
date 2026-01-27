@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryState, parseAsArrayOf, parseAsString } from 'nuqs';
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import { Color } from '@/components/ui/color-picker';
 import { COLOR_MAP } from '@/lib/constants';
 import { useEffect, useMemo } from 'react';
@@ -117,3 +117,4 @@ export function useAvailableColors(products: Product[]) {
     activeColorFilters: color,
   };
 }
+

@@ -2,7 +2,7 @@ import { HomeSidebar } from '@/components/layout/sidebar/home-sidebar';
 import { PageLayout } from '@/components/layout/page-layout';
 import { LatestProductCard } from '@/components/products/latest-product-card';
 import { Badge } from '@/components/ui/badge';
-import { getCollectionProducts, getCollections, getProducts } from '@/lib/shopify';
+import { getCollectionProducts, getCollections, getProducts } from '@/lib/api';
 import { getLabelPosition } from '../lib/utils';
 import { Product } from '../lib/shopify/types';
 
@@ -56,3 +56,4 @@ export default async function Home() {
     </PageLayout>
   );
 }
+

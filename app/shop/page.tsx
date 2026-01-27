@@ -1,4 +1,4 @@
-import { storeCatalog } from '@/lib/shopify/constants';
+import { storeCatalog } from '@/lib/api/constants';
 import ProductList from './components/product-list';
 import { Metadata } from 'next';
 import { Suspense } from 'react';
@@ -38,3 +38,4 @@ export default async function Shop(props: {
     </>
   );
 }
+

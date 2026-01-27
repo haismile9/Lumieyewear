@@ -68,3 +68,4 @@ export function mapSortKeys(
 export const getShopifyProductId = (gid: string) => {
   return gid.split('/').pop() || '';
 };
+

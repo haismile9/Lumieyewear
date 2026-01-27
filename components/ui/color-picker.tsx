@@ -103,3 +103,4 @@ export function ColorPicker({ colors, selectedColors, onColorChange, size = 'md'
     </div>
   );
 }
+

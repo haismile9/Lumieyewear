@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { FeaturedProductLabel } from './featured-product-label';
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import Link from 'next/link';
 
 interface LatestProductCardProps {
@@ -68,3 +68,4 @@ export function LatestProductCard({
     </div>
   );
 }
+

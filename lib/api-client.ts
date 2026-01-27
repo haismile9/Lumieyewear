@@ -329,6 +329,38 @@ export const reviewsApi = {
       body: JSON.stringify({ helpful }),
     });
   },
+
+  // Upload review photos
+  uploadPhotos: async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('photos', file);
+    });
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/reviews/upload-photos`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
+  // Check review status for products
+  checkStatus: async (productIds: string[]) => {
+    return apiRequest('/reviews/check-status', {
+      method: 'POST',
+      body: JSON.stringify({ productIds }),
+    });
+  },
 };
 
 // ========== Settings APIs (Admin) ==========
@@ -354,3 +386,4 @@ export default {
   reviews: reviewsApi,
   settings: settingsApi,
 };
+

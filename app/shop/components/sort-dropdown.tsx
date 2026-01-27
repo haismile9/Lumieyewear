@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useQueryState, parseAsString } from 'nuqs';
 import { cn } from '@/lib/utils';
-import { sortOptions } from '@/lib/shopify/constants';
+import { sortOptions } from '@/lib/api/constants';
 
 interface SortDropdownProps {
   className?: string;
@@ -58,3 +58,4 @@ export function SortDropdown({ className }: SortDropdownProps) {
     </Select>
   );
 }
+

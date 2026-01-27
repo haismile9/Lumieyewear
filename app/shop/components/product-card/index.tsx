@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import { AddToCart, AddToCartButton } from '@/components/cart/add-to-cart';
-import { formatPrice } from '@/lib/shopify/utils';
+import { formatPrice } from '@/lib/api/utils';
 import { VariantSelector } from '../variant-selector';
 import { ProductImage } from './product-image';
 import { Button } from '@/components/ui/button';
@@ -89,3 +89,4 @@ export const ProductCard = ({ product }: { product: Product }) => {
     </div>
   );
 };
+

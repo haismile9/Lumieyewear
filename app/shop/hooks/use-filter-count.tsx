@@ -36,3 +36,4 @@ export function useColorFilterCount() {
   // Return the number of selected color filters
   return color.length;
 }
+

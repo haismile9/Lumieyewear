@@ -7,7 +7,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Collection } from '@/lib/shopify/types';
+import { Collection } from '@/lib/api/types';
 import { useParams } from 'next/navigation';
 
 interface ShopBreadcrumbProps {
@@ -39,3 +39,4 @@ export function ShopBreadcrumb({ collections, className }: ShopBreadcrumbProps) 
     </Breadcrumb>
   );
 }
+

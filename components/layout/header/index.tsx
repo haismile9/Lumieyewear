@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { LogoSvg } from './logo-svg';
 import CartModal from '@/components/cart/modal';
 import { NavItem } from '@/lib/types';
-import { Collection } from '@/lib/shopify/types';
+import { Collection } from '@/lib/api/types';
 import { User, LogOut, ChevronDown } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
@@ -155,3 +155,4 @@ export function Header({ collections, cmsPages = [] }: HeaderProps) {
     </header>
   );
 }
+

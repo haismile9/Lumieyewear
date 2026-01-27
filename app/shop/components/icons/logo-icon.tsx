@@ -10,3 +10,4 @@ const LogoIcon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 export default LogoIcon;
+

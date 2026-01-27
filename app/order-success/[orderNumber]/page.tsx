@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/store/hooks';
 import { clearCart } from '@/store/slices/cartSlice';
-import backendAPI from '@/lib/shopify/backend-api';
+import backendAPI from '@/lib/api/backend-api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';

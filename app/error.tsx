@@ -15,3 +15,4 @@ export default function Error({ reset }: { reset: () => void }) {
     </div>
   );
 }
+

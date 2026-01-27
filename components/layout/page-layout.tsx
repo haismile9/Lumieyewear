@@ -8,3 +8,4 @@ export const PageLayout = ({ children, className }: { children: React.ReactNode;
     </div>
   );
 };
+

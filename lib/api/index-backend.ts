@@ -70,7 +70,7 @@ function transformBackendProduct(backendProduct: any): Product {
     inventoryPolicy: variant.inventoryPolicy as 'DENY' | 'CONTINUE' | undefined,
     price: {
       amount: String(variant.price?.amount || variant.price || '0'),
-      currencyCode: variant.price?.currencyCode || backendProduct.currencyCode || 'USD',
+      currencyCode: variant.price?.currencyCode || backendProduct.currencyCode || 'VND',
     },
     selectedOptions: variant.selectedOptions || [],
   }));
@@ -88,15 +88,15 @@ function transformBackendProduct(backendProduct: any): Product {
     description: backendProduct.description || '',
     descriptionHtml: backendProduct.descriptionHtml || `<p>${backendProduct.description || ''}</p>`,
     featuredImage,
-    currencyCode: backendProduct.currencyCode || 'USD',
+    currencyCode: backendProduct.currencyCode || 'VND',
     priceRange: {
       minVariantPrice: backendProduct.priceRange?.minVariantPrice || {
         amount: variants[0]?.price.amount || '0',
-        currencyCode: backendProduct.currencyCode || 'USD',
+        currencyCode: backendProduct.currencyCode || 'VND',
       },
       maxVariantPrice: backendProduct.priceRange?.maxVariantPrice || {
         amount: variants[0]?.price.amount || '0',
-        currencyCode: backendProduct.currencyCode || 'USD',
+        currencyCode: backendProduct.currencyCode || 'VND',
       },
     },
     compareAtPrice: backendProduct.compareAtPrice,
@@ -227,15 +227,15 @@ function transformBackendCart(backendCart: any): Cart {
     cost: {
       subtotalAmount: {
         amount: backendCart.totalPrice?.toString() || '0',
-        currencyCode: 'USD',
+        currencyCode: 'VND',
       },
       totalAmount: {
         amount: backendCart.totalPrice?.toString() || '0',
-        currencyCode: 'USD',
+        currencyCode: 'VND',
       },
       totalTaxAmount: {
         amount: '0',
-        currencyCode: 'USD',
+        currencyCode: 'VND',
       },
     },
     lines: (backendCart.items || []).map((item: any) => ({
@@ -244,7 +244,7 @@ function transformBackendCart(backendCart: any): Cart {
       cost: {
         totalAmount: {
           amount: (item.price * item.quantity).toString(),
-          currencyCode: 'USD',
+          currencyCode: 'VND',
         },
       },
       merchandise: {
@@ -269,7 +269,7 @@ function transformBackendCart(backendCart: any): Cart {
         },
         price: {
           amount: item.price.toString(),
-          currencyCode: 'USD',
+          currencyCode: 'VND',
         },
       },
     })),
@@ -336,3 +336,4 @@ export async function removeCartLines(cartId: string, lineIds: string[]) {
 
   return transformBackendCart(cart);
 }
+

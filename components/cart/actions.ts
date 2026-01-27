@@ -8,9 +8,9 @@ import {
   addCartLines as addBackendCartLines,
   updateCartLines as updateBackendCartLines,
   removeCartLines as removeBackendCartLines,
-} from '@/lib/shopify/index-backend';
-import backendAPI from '@/lib/shopify/backend-api';
-import type { Cart } from '@/lib/shopify/types';
+} from '@/lib/api/index-backend';
+import backendAPI from '@/lib/api/backend-api';
+import type { Cart } from '@/lib/api/types';
 
 const CART_COOKIE = 'cartId';
 
@@ -53,15 +53,15 @@ function transformCart(backendCart: any): Cart {
     cost: {
       subtotalAmount: {
         amount: backendCart.totalPrice?.toString() || '0',
-        currencyCode: 'USD',
+        currencyCode: 'VND',
       },
       totalAmount: {
         amount: backendCart.totalPrice?.toString() || '0',
-        currencyCode: 'USD',
+        currencyCode: 'VND',
       },
       totalTaxAmount: {
         amount: '0',
-        currencyCode: 'USD',
+        currencyCode: 'VND',
       },
     },
     lines: (backendCart.items || []).map((item: any) => ({
@@ -70,7 +70,7 @@ function transformCart(backendCart: any): Cart {
       cost: {
         totalAmount: {
           amount: (item.price * item.quantity).toString(),
-          currencyCode: 'USD',
+          currencyCode: 'VND',
         },
       },
       merchandise: {
@@ -95,15 +95,15 @@ function transformCart(backendCart: any): Cart {
             width: 800,
             height: 800,
           },
-          currencyCode: 'USD',
+          currencyCode: 'VND',
           priceRange: {
             minVariantPrice: {
               amount: item.price.toString(),
-              currencyCode: 'USD',
+              currencyCode: 'VND',
             },
             maxVariantPrice: {
               amount: item.price.toString(),
-              currencyCode: 'USD',
+              currencyCode: 'VND',
             },
           },
           seo: {
@@ -118,7 +118,7 @@ function transformCart(backendCart: any): Cart {
         },
         price: {
           amount: item.price.toString(),
-          currencyCode: 'USD',
+          currencyCode: 'VND',
         },
       },
     })),
@@ -211,3 +211,4 @@ export async function updateItem({ lineId, quantity }: {
     return null;
   }
 }
+

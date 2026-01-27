@@ -1,7 +1,7 @@
 import { LogoSvg } from './header/logo-svg';
 import { ShopLinks } from './shop-links';
 import { SidebarLinks } from './sidebar/product-sidebar-links';
-import { getCollections } from '@/lib/shopify';
+import { getCollections } from '@/lib/api';
 import Link from 'next/link';
 
 async function getCMSPages() {
@@ -58,3 +58,4 @@ export async function Footer() {
     </footer>
   );
 }
+

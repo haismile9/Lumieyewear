@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(amount: string | number, currencyCode: string) {
-  return new Intl.NumberFormat('en-US', {
+export function formatPrice(amount: string | number, currencyCode: string = 'VND') {
+  return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: currencyCode,
   }).format(Number(amount));
@@ -43,3 +43,4 @@ export const getLabelPosition = (index: number): 'top-left' | 'top-right' | 'bot
   const positions = ['top-left', 'bottom-right', 'top-right', 'bottom-left'] as const;
   return positions[index % positions.length];
 };
+

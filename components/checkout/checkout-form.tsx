@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import backendAPI from '@/lib/shopify/backend-api';
+import backendAPI from '@/lib/api/backend-api';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { clearCart } from '@/store/slices/cartSlice';
 import { useGetAddressesQuery, useUpdateAddressMutation } from '@/store/api/apiSlice';
@@ -831,3 +831,4 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
     </>
   );
 }
+

@@ -6,7 +6,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { ReduxProvider } from '@/store/provider';
 import { DebugGrid } from '@/components/debug-grid';
 import { isDevelopment } from '@/lib/constants';
-import { getCollections } from '@/lib/shopify';
+import { getCollections } from '@/lib/api';
 import { Header } from '../components/layout/header';
 import dynamic from 'next/dynamic';
 import { V0Provider } from '../lib/context';
@@ -79,3 +79,4 @@ export default async function RootLayout({
     </html>
   );
 }
+

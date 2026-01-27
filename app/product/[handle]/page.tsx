@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { getCollection, getProduct, getProducts } from '@/lib/shopify';
+import { getCollection, getProduct, getProducts } from '@/lib/api';
 import { HIDDEN_PRODUCT_TAG } from '@/lib/constants';
 import {
   Breadcrumb,
@@ -14,9 +14,9 @@ import {
 import Link from 'next/link';
 import { SidebarLinks } from '@/components/layout/sidebar/product-sidebar-links';
 import { AddToCart, AddToCartButton } from '@/components/cart/add-to-cart';
-import { storeCatalog } from '@/lib/shopify/constants';
+import { storeCatalog } from '@/lib/api/constants';
 import Prose from '@/components/prose';
-import { formatPrice } from '@/lib/shopify/utils';
+import { formatPrice } from '@/lib/api/utils';
 import { Suspense } from 'react';
 import { cn } from '@/lib/utils';
 import { PageLayout } from '@/components/layout/page-layout';

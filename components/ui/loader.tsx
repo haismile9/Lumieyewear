@@ -54,3 +54,4 @@ function Loader({ size, className }: LoaderProps) {
 }
 
 export { Loader, loaderVariants };
+

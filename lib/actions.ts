@@ -32,3 +32,4 @@ export async function checkEnvs(): Promise<{
     allValid,
   };
 }
+

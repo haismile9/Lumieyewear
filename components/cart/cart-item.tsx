@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { DeleteItemButton } from './delete-item-button';
 import { EditItemQuantityButton } from './edit-item-quantity-button';
-import { formatPrice } from '@/lib/shopify/utils';
+import { formatPrice } from '@/lib/api/utils';
 
 interface CartItemProps {
   item: CartItem;
@@ -35,7 +35,7 @@ export function CartItemCard({ item, onCloseCart }: CartItemProps) {
             )}
           </Link>
           <p className="2xl:text-lg font-semibold">
-            {formatPrice((item.price * item.quantity).toString(), 'USD')}
+            {formatPrice((item.price * item.quantity).toString(), 'VND')}
           </p>
           <div className="flex justify-between items-end mt-auto">
             <div className="flex h-8 flex-row items-center rounded-md border border-neutral-200">
@@ -50,3 +50,4 @@ export function CartItemCard({ item, onCloseCart }: CartItemProps) {
     </div>
   );
 }
+

@@ -263,3 +263,4 @@ export type Page = {
   createdAt: string;
   updatedAt: string;
 };
+

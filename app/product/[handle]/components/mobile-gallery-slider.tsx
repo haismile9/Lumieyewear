@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
-import { Product } from '@/lib/shopify/types';
+import { Product } from '@/lib/api/types';
 import { Badge } from '@/components/ui/badge';
 import { useProductImages, useSelectedVariant } from '@/components/products/variant-selector';
 import { getImageUrl } from '@/lib/api-client';

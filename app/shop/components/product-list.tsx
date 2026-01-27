@@ -1,7 +1,7 @@
-import { getCollectionProducts, getCollections, getProducts } from '@/lib/shopify';
-import type { Product, ProductCollectionSortKey, ProductSortKey } from '@/lib/shopify/types';
+import { getCollectionProducts, getCollections, getProducts } from '@/lib/api';
+import type { Product, ProductCollectionSortKey, ProductSortKey } from '@/lib/api/types';
 import { ProductListContent } from './product-list-content';
-import { mapSortKeys } from '@/lib/shopify/utils';
+import { mapSortKeys } from '@/lib/api/utils';
 
 interface ProductListProps {
   collection: string;
@@ -41,3 +41,4 @@ export default async function ProductList({ collection, searchParams }: ProductL
 
   return <ProductListContent products={products} collections={collections} />;
 }
+

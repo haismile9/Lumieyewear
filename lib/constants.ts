@@ -91,3 +91,4 @@ export const COLOR_MAP: Record<string, string> = {
   'navy-blue': '#000080',
   wood: '#8d6e63',
 };
+

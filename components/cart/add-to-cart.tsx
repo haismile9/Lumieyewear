@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusCircleIcon } from 'lucide-react';
-import { Product, ProductVariant } from '@/lib/shopify/types';
+import { Product, ProductVariant } from '@/lib/api/types';
 import { useMemo, useState } from 'react';
 import { Button, ButtonProps } from '../ui/button';
 import { useSelectedVariant } from '@/components/products/variant-selector';
@@ -14,7 +14,7 @@ import { useAddCartItemMutation } from '@/store/api/apiSlice';
 import { setCart } from '@/store/slices/cartSlice';
 import { extractProductId, transformCartResponse } from '@/lib/cart-utils';
 import { toast } from 'sonner';
-import { getShopifyProductId } from '@/lib/shopify/utils';
+import { getShopifyProductId } from '@/lib/api/utils';
 
 interface AddToCartProps extends ButtonProps {
   product: Product;
@@ -188,3 +188,4 @@ export function AddToCart({
     />
   );
 }
+

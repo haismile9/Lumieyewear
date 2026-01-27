@@ -1,6 +1,6 @@
 'use client';
 
-import { Collection } from '@/lib/shopify/types';
+import { Collection } from '@/lib/api/types';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -45,3 +45,4 @@ export function CategoryFilter({ collections, className }: CategoryFilterProps) 
     </div>
   );
 }
+

@@ -17,3 +17,4 @@ export function CardTypeIcon({ cardType, className = 'w-6 h-6' }: CardTypeIconPr
 
   return Icon ? <Icon className={className} /> : <CreditCard className={`${className} opacity-50`} />;
 }
+

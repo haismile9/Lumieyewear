@@ -75,3 +75,4 @@ export function DiscoverIcon(props: React.ComponentProps<'svg'>) {
     </svg>
   );
 }
+

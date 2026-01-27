@@ -1,14 +1,14 @@
 'use client';
 
 import { cva, type VariantProps } from 'class-variance-authority';
-import { CartProduct, Product, ProductOption, ProductVariant, SelectedOptions } from '@/lib/shopify/types';
+import { CartProduct, Product, ProductOption, ProductVariant, SelectedOptions } from '@/lib/api/types';
 import { startTransition, useMemo } from 'react';
 import { useQueryState, parseAsString } from 'nuqs';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ColorSwatch } from '@/components/ui/color-picker';
 import { Button } from '@/components/ui/button';
 import { getColorHex } from '@/lib/utils';
-import { getShopifyProductId } from '@/lib/shopify/utils';
+import { getShopifyProductId } from '@/lib/api/utils';
 
 type Combination = {
   id: string;
@@ -384,3 +384,4 @@ export const useProductImages = (product: Product | CartProduct, selectedOptions
   // Ultimate fallback - return first image or empty array
   return images.length > 0 ? [images[0]] : [];
 };
+

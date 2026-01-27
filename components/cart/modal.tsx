@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../ui/button';
 import { Loader } from '../ui/loader';
 import { CartItemCard } from './cart-item';
-import { formatPrice } from '@/lib/shopify/utils';
+import { formatPrice } from '@/lib/api/utils';
 import { useBodyScrollLock } from '@/lib/hooks/use-body-scroll-lock';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,7 @@ const CartItems = ({ closeCart }: { closeCart: () => void }) => {
           <div className="flex justify-between items-center pt-1 pb-1 mb-1.5 text-lg font-semibold">
             <p>Total</p>
             <p className="text-base text-right text-foreground">
-              {formatPrice(cart.totalPrice.toString(), 'USD')}
+              {formatPrice(cart.totalPrice.toString(), 'VND')}
             </p>
           </div>
         </div>
@@ -220,3 +220,4 @@ function CheckoutButton({ closeCart }: { closeCart: () => void }) {
     </Button>
   );
 }
+

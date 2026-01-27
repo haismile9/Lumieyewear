@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import backendAPI from '@/lib/shopify/backend-api';
+import backendAPI from '@/lib/api/backend-api';
 import Link from 'next/link';
 import CheckoutForm from '@/components/checkout/checkout-form';
 
