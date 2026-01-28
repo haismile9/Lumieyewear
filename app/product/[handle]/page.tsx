@@ -23,7 +23,7 @@ import { PageLayout } from '@/components/layout/page-layout';
 import { VariantSelectorSlots } from './components/variant-selector-slots';
 import { MobileGallerySlider } from './components/mobile-gallery-slider';
 import { DesktopGallery } from './components/desktop-gallery';
-import { ProductReviews } from '@/components/products/product-reviews';
+import { ProductReviews } from '@/components/products/product-reviews-wrapper';
 import { WishlistButton } from '@/components/products/wishlist-button';
 
 // Generate static params for all products at build time
@@ -41,7 +41,7 @@ export async function generateStaticParams() {
 }
 
 // Enable ISR with 10 seconds revalidation for fresh product data
-export const revalidate = 10;
+export const revalidate = 60;
 
 export async function generateMetadata(props: { params: Promise<{ handle: string }> }): Promise<Metadata> {
   const params = await props.params;

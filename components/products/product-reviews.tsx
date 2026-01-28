@@ -31,14 +31,15 @@ interface Review {
   createdAt: string;
 }
 
-interface ProductReviewsProps {
+interface ProductReviewsClientProps {
   productId: string;
+  initialReviews: Review[];
 }
 
-export function ProductReviews({ productId }: ProductReviewsProps) {
+export function ProductReviewsClient({ productId, initialReviews }: ProductReviewsClientProps) {
   const token = useAppSelector((state) => state.auth.token);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -49,10 +50,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [hoverRating, setHoverRating] = useState(0);
-
-  useEffect(() => {
-    fetchReviews();
-  }, [productId]);
 
   const fetchReviews = async () => {
     try {

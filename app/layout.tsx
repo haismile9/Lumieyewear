@@ -5,7 +5,7 @@ import { Toaster } from 'sonner';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { ReduxProvider } from '@/store/provider';
 import { DebugGrid } from '@/components/debug-grid';
-import { isDevelopment } from '@/lib/constants';
+import { isDevelopment, API_BASE_URL } from '@/lib/constants';
 import { getCollections } from '@/lib/api';
 import { Header } from '../components/layout/header';
 import dynamic from 'next/dynamic';
@@ -18,7 +18,7 @@ const isV0 = process.env['VERCEL_URL']?.includes('vusercontent.net') ?? false;
 
 async function getCMSPages() {
   try {
-    const response = await fetch('http://127.0.0.1:5002/api/pages', {
+    const response = await fetch(`${API_BASE_URL}/pages`, {
       next: { revalidate: 3600 },
     });
     
@@ -53,8 +53,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const collections = await getCollections();
-  const cmsPages = await getCMSPages();
+  const [collections, cmsPages] = await Promise.all([
+    getCollections(),
+    getCMSPages()
+  ]);
 
   return (
     <html lang="en">

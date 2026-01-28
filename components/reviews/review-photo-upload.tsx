@@ -77,7 +77,7 @@ export function ReviewPhotoUpload({
         return;
       }
 
-      const response = await fetch('http://127.0.0.1:5002/api/reviews/upload-photos', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5002/api'}/reviews/upload-photos`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

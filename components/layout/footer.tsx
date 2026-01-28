@@ -2,11 +2,12 @@ import { LogoSvg } from './header/logo-svg';
 import { ShopLinks } from './shop-links';
 import { SidebarLinks } from './sidebar/product-sidebar-links';
 import { getCollections } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/constants';
 import Link from 'next/link';
 
 async function getCMSPages() {
   try {
-    const response = await fetch('http://127.0.0.1:5002/api/pages', {
+    const response = await fetch(`${API_BASE_URL}/pages`, {
       next: { revalidate: 3600 },
     });
     

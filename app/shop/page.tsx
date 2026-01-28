@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 // Enable ISR with 1 minute revalidation
-export const revalidate = 10;
+export const revalidate = 60;
 
 export default async function Shop(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;

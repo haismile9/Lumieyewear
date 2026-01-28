@@ -28,6 +28,9 @@ export const DEFAULT_OPTION = 'Default Title';
 
 export const isDevelopment = process.env.NODE_ENV === 'development';
 
+// API Configuration
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5002/api';
+
 // Internal color mapping for common color names to hex values
 export const COLOR_MAP: Record<string, string> = {
   // Basic colors
