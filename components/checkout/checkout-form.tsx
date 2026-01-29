@@ -62,6 +62,19 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
   const [editingAddressData, setEditingAddressData] = useState<any>(null);
   const [updateAddress, { isLoading: isUpdatingAddress }] = useUpdateAddressMutation();
 
+  // Shipping Methods State
+  const [shippingMethods, setShippingMethods] = useState<any[]>([]);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>('');
+  const [shippingFee, setShippingFee] = useState<number>(0);
+  const [isLoadingShipping, setIsLoadingShipping] = useState(false);
+
+  // Coupon State
+  const [couponCode, setCouponCode] = useState<string>('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponDiscount, setCouponDiscount] = useState<number>(0);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string>('');
+
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -74,6 +87,38 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
     notes: '',
     paymentMethod: 'cod',
   });
+
+  // Load shipping methods on mount
+  useEffect(() => {
+    const loadShippingMethods = async () => {
+      try {
+        setIsLoadingShipping(true);
+        const response = await backendAPI.getShippingMethods();
+        const activeMethods = response.data.filter(m => m.isActive);
+        setShippingMethods(activeMethods);
+        // Auto-select first method
+        if (activeMethods.length > 0 && !selectedShippingMethod) {
+          setSelectedShippingMethod(activeMethods[0].code);
+          setShippingFee(parseFloat(activeMethods[0].basePrice) || 0);
+        }
+      } catch (err) {
+        console.error('Error loading shipping methods:', err);
+      } finally {
+        setIsLoadingShipping(false);
+      }
+    };
+    loadShippingMethods();
+  }, []);
+
+  // Update shipping fee when method changes
+  useEffect(() => {
+    if (selectedShippingMethod && shippingMethods.length > 0) {
+      const method = shippingMethods.find(m => m.code === selectedShippingMethod);
+      if (method) {
+        setShippingFee(parseFloat(method.basePrice) || 0);
+      }
+    }
+  }, [selectedShippingMethod, shippingMethods]);
 
   // Auto-fill user info when logged in
   useEffect(() => {
@@ -97,6 +142,50 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
       }
     }
   }, [addressesData, selectedAddressId, useNewAddress]);
+
+  // Handle coupon validation
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Vui lòng nhập mã giảm giá');
+      return;
+    }
+
+    try {
+      setIsValidatingCoupon(true);
+      setCouponError('');
+      const response = await backendAPI.validateCoupon(couponCode.trim(), cart.totalPrice || 0);
+      
+      if (response.valid && response.coupon) {
+        setAppliedCoupon(response.coupon);
+        setCouponDiscount(response.discountAmount || 0);
+        toast.success(`Áp dụng mã "${response.coupon.code}" thành công!`);
+      } else {
+        setCouponError(response.message || 'Mã giảm giá không hợp lệ');
+        setAppliedCoupon(null);
+        setCouponDiscount(0);
+      }
+    } catch (err: any) {
+      setCouponError(err.message || 'Không thể kiểm tra mã giảm giá');
+      setAppliedCoupon(null);
+      setCouponDiscount(0);
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  // Remove coupon
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+    setCouponError('');
+    toast.info('Đã bỏ mã giảm giá');
+  };
+
+  // Handle shipping method change
+  const handleShippingMethodChange = (code: string) => {
+    setSelectedShippingMethod(code);
+  };
 
   // Auto-fill address when selected
   useEffect(() => {
@@ -136,7 +225,14 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
     setError(null);
 
     try {
-      // Prepare order data
+      // Validate shipping method
+      if (!selectedShippingMethod) {
+        setError('Vui lòng chọn phương thức vận chuyển');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare order data with shipping and coupon
       const orderData = {
         items: cart.items.map((item) => ({
           productId: item.product?.id || '',
@@ -155,33 +251,79 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
           country: 'VN',
         },
         paymentMethod: formData.paymentMethod,
-        shippingMethod: 'standard',
+        shippingMethodCode: selectedShippingMethod,
+        ...(appliedCoupon && { couponCode: appliedCoupon.code }),
         customerNote: formData.notes,
-        cartId: cart.id, // Add cartId so backend can clear cart automatically
-        ...(user && { userId: user.id }), // Add userId if user is logged in
+        cartId: cart.id,
+        ...(user && { userId: user.id }),
       };
 
       // Create order
       const response = await backendAPI.createOrder(orderData);
+      const order = response.order;
 
-      // Clear cart after successful order (fallback - backend should have cleared it already)
+      // Clear cart after successful order
       try {
         await backendAPI.clearCart(cart.id);
-        console.log('✅ Cart cleared via frontend fallback');
       } catch (clearError) {
-        console.warn('⚠️ Frontend cart clear failed (backend may have already cleared it):', clearError);
-        // Don't fail the checkout flow if cart clearing fails
+        console.warn('⚠️ Frontend cart clear failed:', clearError);
       }
 
-      // Also clear Redux cart state
+      // Clear Redux cart state
       dispatch(clearCart());
-      console.log('✅ Redux cart state cleared');
 
       // Store email in sessionStorage for order verification
       sessionStorage.setItem('orderEmail', formData.email);
 
-      // Redirect to order success page
-      router.push(`/order-success/${response.order.orderNumber}`);
+      // Handle payment redirects for VNPay/MoMo
+      if (formData.paymentMethod === 'vnpay') {
+        try {
+          const paymentResponse = await backendAPI.createVNPayPayment({
+            orderId: order.id,
+            amount: parseFloat(order.total),
+            orderInfo: `Thanh toan don hang ${order.orderNumber}`,
+            returnUrl: `${window.location.origin}/checkout/result?method=vnpay`,
+          });
+          
+          if (paymentResponse.success && paymentResponse.paymentUrl) {
+            window.location.href = paymentResponse.paymentUrl;
+            return;
+          } else {
+            throw new Error('Không thể tạo liên kết thanh toán VNPay');
+          }
+        } catch (paymentErr: any) {
+          console.error('VNPay payment error:', paymentErr);
+          toast.error('Lỗi tạo thanh toán VNPay. Đơn hàng đã được tạo, vui lòng thanh toán sau.');
+          router.replace(`/order-success/${order.orderNumber}`);
+          return;
+        }
+      }
+
+      if (formData.paymentMethod === 'momo') {
+        try {
+          const paymentResponse = await backendAPI.createMoMoPayment({
+            orderId: order.id,
+            amount: parseFloat(order.total),
+            orderInfo: `Thanh toan don hang ${order.orderNumber}`,
+            returnUrl: `${window.location.origin}/checkout/result?method=momo`,
+          });
+          
+          if (paymentResponse.success && paymentResponse.payUrl) {
+            window.location.href = paymentResponse.payUrl;
+            return;
+          } else {
+            throw new Error('Không thể tạo liên kết thanh toán MoMo');
+          }
+        } catch (paymentErr: any) {
+          console.error('MoMo payment error:', paymentErr);
+          toast.error('Lỗi tạo thanh toán MoMo. Đơn hàng đã được tạo, vui lòng thanh toán sau.');
+          router.replace(`/order-success/${order.orderNumber}`);
+          return;
+        }
+      }
+
+      // For COD and bank transfer, redirect to success page
+      router.replace(`/order-success/${order.orderNumber}`);
     } catch (err: any) {
       console.error('Error creating order:', err);
       setError(err.message || 'Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.');
@@ -500,10 +642,106 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
               )}
             </div>
 
+            {/* Shipping Method Selection */}
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">Phương thức vận chuyển</h2>
+              {isLoadingShipping ? (
+                <div className="p-4 text-center text-gray-500">
+                  Đang tải phương thức vận chuyển...
+                </div>
+              ) : shippingMethods.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  Không có phương thức vận chuyển khả dụng
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {shippingMethods.map((method) => (
+                    <label
+                      key={method.code}
+                      className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all ${
+                        selectedShippingMethod === method.code
+                          ? 'border-black bg-gray-50 shadow-sm'
+                          : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="shippingMethod"
+                        value={method.code}
+                        checked={selectedShippingMethod === method.code}
+                        onChange={() => handleShippingMethodChange(method.code)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{method.name}</span>
+                          <span className="font-semibold text-blue-600">
+                            {new Intl.NumberFormat('vi-VN', {
+                              style: 'currency',
+                              currency: 'VND',
+                            }).format(parseFloat(method.basePrice) || 0)}
+                          </span>
+                        </div>
+                        {method.description && (
+                          <p className="text-sm text-gray-600 mt-1">{method.description}</p>
+                        )}
+                        {method.estimatedDays && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            ⏱ Thời gian dự kiến: {method.estimatedDays}
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Payment Method */}
             <div className="rounded-lg border bg-white p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Phương thức thanh toán</h2>
               <div className="space-y-3">
+                <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={formData.paymentMethod === 'cod'}
+                    onChange={(e) => handlePaymentMethodChange(e.target.value)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <span className="font-medium">💵 Thanh toán khi nhận hàng (COD)</span>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Thanh toán bằng tiền mặt khi nhận hàng.
+                    </p>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="vnpay"
+                    checked={formData.paymentMethod === 'vnpay'}
+                    onChange={(e) => handlePaymentMethodChange(e.target.value)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">VNPay</span>
+                      <img
+                        src="https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg"
+                        alt="VNPay"
+                        className="h-6 rounded"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Thanh toán qua VNPay - Hỗ trợ thẻ ATM, Visa, Mastercard và ví điện tử.
+                    </p>
+                  </div>
+                </label>
+
                 <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                   <input
                     type="radio"
@@ -515,15 +753,15 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">Ví điện tử MoMo</span>
+                      <span className="font-medium">Ví MoMo</span>
                       <img
                         src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-MoMo-Square.png"
                         alt="MoMo"
-                        className="h-6"
+                        className="h-6 rounded"
                       />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      Thanh toán an toàn qua ví MoMo. Bạn sẽ được chuyển đến ứng dụng MoMo.
+                      Thanh toán nhanh chóng và an toàn qua ví điện tử MoMo.
                     </p>
                   </div>
                 </label>
@@ -539,32 +777,10 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">Chuyển khoản ngân hàng</span>
-                      <img
-                        src="https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg"
-                        alt="Ngân hàng"
-                        className="h-6"
-                      />
+                      <span className="font-medium">🏦 Chuyển khoản ngân hàng</span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Chuyển khoản trực tiếp vào tài khoản ngân hàng. Đơn hàng sẽ được xử lý sau khi xác nhận thanh toán.
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="cod"
-                    checked={formData.paymentMethod === 'cod'}
-                    onChange={(e) => handlePaymentMethodChange(e.target.value)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium">Thanh toán khi nhận hàng (COD)</span>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Thanh toán bằng tiền mặt khi nhận hàng.
                     </p>
                   </div>
                 </label>
@@ -573,10 +789,10 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
               <div className="mt-6 pt-6 border-t">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !selectedShippingMethod}
                   className="w-full rounded-md bg-black px-6 py-3 text-white font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Đang xử lý...' : 'Đặt hàng'}
+                  {isSubmitting ? 'Đang xử lý...' : formData.paymentMethod === 'vnpay' || formData.paymentMethod === 'momo' ? 'Đặt hàng & Thanh toán' : 'Đặt hàng'}
                 </button>
                 <p className="mt-4 text-center text-sm text-gray-600">
                   Bằng việc đặt hàng, bạn đồng ý với{' '}
@@ -624,28 +840,83 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
               ))}
             </div>
 
+            {/* Coupon Code Input */}
+            <div className="mt-6 pt-4 border-t">
+              <h3 className="text-sm font-medium mb-2">Mã giảm giá</h3>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-green-800">
+                      🎉 {appliedCoupon.code}
+                    </p>
+                    <p className="text-xs text-green-600">
+                      {appliedCoupon.description || `Giảm ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(couponDiscount)}`}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-sm text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Nhập mã giảm giá"
+                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={isValidatingCoupon || !couponCode.trim()}
+                      className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {isValidatingCoupon ? '...' : 'Áp dụng'}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-xs text-red-600">{couponError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Order Summary */}
             <div className="mt-6 space-y-2 border-t pt-4">
               <div className="flex justify-between text-sm text-gray-600">
-                <span>Subtotal</span>
-                <span>${cart.totalPrice?.toFixed(2) || '0.00'}</span>
+                <span>Tạm tính</span>
+                <span>
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(cart.totalPrice || 0)}
+                </span>
               </div>
               <div className="flex justify-between text-sm text-gray-600">
-                <span>Shipping</span>
-                <span>Calculated at next step</span>
+                <span>Phí vận chuyển</span>
+                <span>
+                  {shippingFee > 0 
+                    ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(shippingFee)
+                    : 'Chọn phương thức'}
+                </span>
               </div>
-              {cart.discountAmount && cart.discountAmount > 0 && (
+              {couponDiscount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Discount</span>
-                  <span>-${cart.discountAmount.toFixed(2)}</span>
+                  <span>Giảm giá ({appliedCoupon?.code})</span>
+                  <span>
+                    -{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(couponDiscount)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-3 text-lg font-bold">
-                <span>Total</span>
-                <span>
-                  $
-                  {(
-                    (cart.totalPrice || 0) - (cart.discountAmount || 0)
-                  ).toFixed(2)}
+                <span>Tổng cộng</span>
+                <span className="text-blue-600">
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+                    (cart.totalPrice || 0) + shippingFee - couponDiscount
+                  )}
                 </span>
               </div>
             </div>
@@ -655,7 +926,7 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
                 href="/"
                 className="text-sm text-gray-600 hover:text-black underline block text-center"
               >
-                ← Continue Shopping
+                ← Tiếp tục mua sắm
               </Link>
             </div>
           </div>

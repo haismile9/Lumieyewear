@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/lib/constants';
-import { ProductReviewsClient } from './product-reviews-client';
+import { ProductReviewsClient } from './product-reviews';
 
 interface Review {
   id: string;

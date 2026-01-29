@@ -317,6 +317,106 @@ export const backendAPI = {
   async getOrderByNumber(orderNumber: string, email: string) {
     return backendFetch<{ data: any }>(`/orders/number/${orderNumber}?email=${encodeURIComponent(email)}`);
   },
+
+  // Shipping Methods API
+  async getShippingMethods() {
+    return backendFetch<{
+      data: Array<{
+        id: string;
+        code: string;
+        name: string;
+        description: string;
+        basePrice: string;
+        estimatedDays: string;
+        isActive: boolean;
+      }>;
+    }>('/shipping-methods');
+  },
+
+  async calculateShipping(params: {
+    shippingMethodCode: string;
+    subtotal: number;
+    city?: string;
+    district?: string;
+  }) {
+    return backendFetch<{
+      shippingMethod: any;
+      shippingFee: number;
+      estimatedDays: string;
+    }>('/shipping-methods/calculate', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  // Coupons API
+  async validateCoupon(code: string, subtotal: number) {
+    return backendFetch<{
+      valid: boolean;
+      coupon?: {
+        code: string;
+        discountType: string;
+        discountValue: string;
+        description: string;
+      };
+      discountAmount?: number;
+      message?: string;
+    }>('/coupons/validate', {
+      method: 'POST',
+      body: JSON.stringify({ code, subtotal }),
+    });
+  },
+
+  // Payment Methods API
+  async getPaymentMethods() {
+    return backendFetch<{
+      methods: Array<{
+        id: string;
+        name: string;
+        description: string;
+        icon?: string;
+        available: boolean;
+      }>;
+    }>('/payments/methods');
+  },
+
+  // VNPay Payment
+  async createVNPayPayment(params: {
+    orderId: string;
+    amount: number;
+    orderInfo?: string;
+    returnUrl?: string;
+    locale?: string;
+    bankCode?: string;
+  }) {
+    return backendFetch<{
+      success: boolean;
+      paymentUrl: string;
+      orderId: string;
+    }>('/payments/vnpay/create', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  // MoMo Payment
+  async createMoMoPayment(params: {
+    orderId: string;
+    amount: number;
+    orderInfo?: string;
+    returnUrl?: string;
+    notifyUrl?: string;
+  }) {
+    return backendFetch<{
+      success: boolean;
+      payUrl: string;
+      orderId: string;
+      requestId: string;
+    }>('/payments/momo/create', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
 };
 
 export default backendAPI;
